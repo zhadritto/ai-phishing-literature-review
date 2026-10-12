@@ -19,10 +19,17 @@ The literature review will inform the proposed experiment.
 For Task 2, we prepare its methodology and a measurement script
 using synthetic sample data.
 
-## 2. Research Question
+## 2. Research Questions
 
-Does the probability of correctly detecting phishing differ
-between AI-generated and human-written phishing emails?
+The research questions are inherited from Task 1.
+
+**RQ1:** What levels of human detection accuracy for AI-generated phishing emails are reported in existing research?
+
+**RQ2:** Does the use of generative AI in phishing emails affect people's ability to identify phishing compared with traditional human-written phishing emails?
+
+**RQ3:** What factors influence people's ability to identify AI-generated phishing emails?
+
+RQ2 is the primary focus of the Task 2 measurement pipeline.
 
 ## 3. Research Type
 
@@ -40,13 +47,64 @@ and the reasons behind classification decisions.
 The current script implements the quantitative measurement
 component only.
 
-## 4. Hypotheses
+## 4. Hypotheses and Variables
 
-H0: The probability of correctly identifying phishing is equal
-for AI-generated and human-written phishing emails.
+The hypotheses are inherited from Task 1 and organized around three research questions.
 
-H1: The probability of correctly identifying phishing differs
-between AI-generated and human-written phishing emails.
+### RQ1: Reported Detection Accuracy
+
+**H0:** Reported human detection accuracy for AI-generated phishing emails does not differ from chance-level performance and does not vary meaningfully across study conditions.
+
+**H1:** Reported human detection accuracy for AI-generated phishing emails differs from chance-level performance and varies across study conditions.
+
+- Independent variables: Study and email conditions, including AI-generation method, personalization, styling, training, and study design.
+- Dependent variable: Reported human detection accuracy.
+- Potential confounders: Cybersecurity knowledge, previous experience, age, education, email quality, and measurement method.
+
+RQ1 is primarily descriptive and will be addressed through synthesis of published research. The current benchmark does not compare multiple published studies or directly test chance-level performance.
+
+### RQ2: Comparison of AI-Generated and Human-Written Phishing
+
+**H0:** There is no significant difference between people's ability to identify AI-generated phishing emails and traditional human-written phishing emails.
+
+**H1:** People are less able to identify AI-generated phishing emails than traditional human-written phishing emails.
+
+- Independent variable: Email authorship (AI-generated or human-written).
+- Dependent variable: Human phishing-detection accuracy.
+- Potential confounders: Cybersecurity knowledge, previous experience, training, age, education, email quality, grammatical errors, personalization, and study design.
+
+RQ2 is the primary focus of the Task 2 measurement plan.
+
+The benchmark calculates detection recall for each phishing category:
+
+- Recall_AI = TP_AI / (TP_AI + FN_AI)
+- Recall_Human = TP_Human / (TP_Human + FN_Human)
+
+The primary descriptive comparison is:
+
+Difference = Recall_AI − Recall_Human
+
+A negative difference is consistent with the direction of H1. However, statistical inference using real participant data would be required to evaluate whether the observed difference is statistically significant.
+
+### RQ3: Human Factors Influencing Detection Accuracy
+
+**H0:** Cybersecurity awareness, previous phishing experience, and security-awareness training are not significantly associated with detection accuracy.
+
+**H1:** Higher cybersecurity awareness, previous phishing experience, and security-awareness training are associated with higher accuracy in detecting AI-generated phishing emails.
+
+- Independent variables: Cybersecurity awareness, previous phishing experience, and security-awareness training.
+- Dependent variable: Human phishing-detection accuracy.
+- Potential confounders: Age, education, technical experience, occupation, email complexity, personalization, AI model, and experimental design.
+
+RQ3 will be addressed through published literature and may be examined empirically in future research if the required participant-level variables are collected.
+
+### Scope and Limitations
+
+The current Task 2 benchmark operationalizes RQ2 using a reproducible Python measurement pipeline.
+
+RQ1 and RQ3 are retained to maintain consistency with Task 1, but the present implementation does not independently test all three research questions.
+
+The included synthetic dataset is used only for demonstrating and validating the calculation pipeline. No conclusions about real human phishing-detection ability are drawn from synthetic results.
 
 ## 5. Variable Matrix
 
@@ -219,8 +277,8 @@ The repository includes:
 
 The script prints calculated metrics and saves a JSON output file.
 
-The Docker image tag specifies the runtime version. Pinning
-an image digest would additionally provide image immutability.
+The Docker base image is pinned by version and SHA-256 digest.
+The script uses only the Python standard library, so no external Python packages are required.
 
 ## 15. Expected Outcome at This Stage
 
