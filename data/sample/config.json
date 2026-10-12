@@ -1,0 +1,10 @@
+{
+  "input_path": "data/sample/responses.csv",
+  "output_path": "results/sample_metrics.json",
+  "phishing_conditions": [
+    "ai_phishing",
+    "human_phishing"
+  ],
+  "max_false_positive_rate": 0.20,
+  "dataset_kind": "synthetic_demo"
+}
