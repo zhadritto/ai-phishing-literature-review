@@ -26,18 +26,43 @@ and a script for calculating detection metrics from recorded
 responses. It does not yet contain a completed literature review
 or findings from real participants.
 
-## Research Question
+## Research Questions and Hypotheses
 
-Does the probability of correctly detecting phishing differ
-between AI-generated and human-written phishing emails?
+The research questions and hypotheses in Task 2 are derived directly from Task 1: *Human Ability to Detect AI-Generated Phishing Emails: A Review of Existing Research*.
 
-## Hypotheses
+### RQ1: Human Detection Accuracy
 
-H0: The probability of correctly identifying phishing is equal
-for AI-generated and human-written phishing emails.
+Research Question: What levels of human detection accuracy for AI-generated phishing emails are reported in existing research?
 
-H1: The probability of correctly identifying phishing differs
-between AI-generated and human-written phishing emails.
+H0: Reported human detection accuracy for AI-generated phishing emails does not differ from chance-level performance and does not vary meaningfully across study conditions.
+
+H1: Reported human detection accuracy for AI-generated phishing emails differs from chance-level performance and varies across study conditions.
+
+### RQ2: AI-Generated vs. Human-Written Phishing
+
+Research Question: Does the use of generative AI in phishing emails affect people's ability to identify phishing compared with traditional human-written phishing emails?
+
+H0: There is no significant difference between people's ability to identify AI-generated phishing emails and traditional human-written phishing emails.
+
+H1: People are less able to identify AI-generated phishing emails than traditional human-written phishing emails.
+
+### RQ3: Factors Influencing Detection Accuracy
+
+Research Question: What factors influence people's ability to identify AI-generated phishing emails?
+
+H0: Cybersecurity awareness, previous phishing experience, and security-awareness training are not significantly associated with detection accuracy.
+
+H1: Higher cybersecurity awareness, previous phishing experience, and security-awareness training are associated with higher accuracy in detecting AI-generated phishing emails.
+
+### Connection Between Task 1 and Task 2
+
+Task 1 established the research questions and hypotheses through a review of existing scientific literature.
+
+Task 2 develops a reproducible measurement plan focusing primarily on RQ2, comparing human detection performance for AI-generated and human-written phishing emails.
+
+RQ1 and RQ3 remain part of the broader research framework and can be addressed through literature synthesis or future extensions of the research design.
+
+The current Python benchmark uses synthetic demonstration data to validate metric calculations. These data do not provide empirical evidence for accepting or rejecting the hypotheses.
 
 ## Methodology
 
