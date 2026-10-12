@@ -1,0 +1,50 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Generated output
+results/
+*.log
+
+# Private participant data and local downloads
+data/private/
+data/raw/
+references/pdfs/
+
+# Large binary files and model weights
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.safetensors
+
+# Editor files
+.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
