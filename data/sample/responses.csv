@@ -1,0 +1,9 @@
+participant_id,email_id,email_type,predicted_label,response_time_seconds,confidence
+P01,A01,ai_phishing,legitimate,12.4,4
+P01,H01,human_phishing,phishing,8.2,5
+P01,L01,legitimate,legitimate,6.1,4
+P01,L02,legitimate,phishing,9.0,3
+P02,A01,ai_phishing,phishing,10.5,3
+P02,H01,human_phishing,phishing,7.4,4
+P02,L01,legitimate,legitimate,5.8,5
+P02,L02,legitimate,legitimate,8.3,4
