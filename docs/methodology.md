@@ -101,13 +101,19 @@ FPR = FP / (FP + TN)
 FP: A legitimate email incorrectly classified as phishing.
 TN: A legitimate email correctly classified as legitimate.
 
-Provisional threshold: FPR <= 0.20.
+The provisional threshold is FPR <= 0.20. This represents a
+project-defined tolerance of no more than one false alarm per
+five legitimate-email classifications.
 
-This is a project-defined threshold, not an established standard.
-It will be reviewed during the pilot and fixed before the main study.
+We use this threshold to identify excessive false alarms that
+could make a detection strategy impractical. It is a planning
+criterion, not a published standard or an empirically validated
+cut-off.
 
-This guardrail prevents a strategy of marking every email as
-phishing from being interpreted as good overall performance.
+During the pilot, we will assess whether this tolerance is
+appropriate. Any revision will be documented and fixed before
+main data collection. We will report the observed FPR regardless
+of whether it passes the threshold.
 
 ### Data Validity
 
