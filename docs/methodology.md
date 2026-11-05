@@ -25,7 +25,9 @@ The research questions are inherited from Task 1.
 
 **RQ1:** What levels of human detection accuracy for AI-generated phishing emails are reported in existing research?
 
-**RQ2:** Does the use of generative AI in phishing emails affect people's ability to identify phishing compared with traditional human-written phishing emails?
+**RQ2:** How accurately can participants identify AI-generated phishing emails and distinguish them from legitimate emails?
+
+The survey includes 6 AI-generated phishing emails and 6 legitimate emails. It does not include human-written phishing emails. Therefore, the study cannot directly compare AI-generated and human-written phishing detection.
 
 **RQ3:** What factors influence people's ability to identify AI-generated phishing emails?
 
