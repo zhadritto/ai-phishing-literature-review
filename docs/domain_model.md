@@ -16,3 +16,23 @@ The system consists of several stages:
 
 The main purpose of the system is to support the analysis of human phishing detection performance while protecting participants' data and ensuring the integrity of research results.
 
+
+## 2. System Actors
+
+| Actor | Description |
+|---|---|
+| Participant | Evaluates email examples and submits classification responses. |
+| Researchers | Manage the study, process collected data, perform statistical analysis, and interpret results. |
+| Google Forms | External service used to collect questionnaire responses. |
+
+## 3. System Components
+
+| Component | Description |
+|---|---|
+| Google Forms | Collects participant responses. |
+| Raw CSV Dataset | Stores exported questionnaire responses. |
+| Data Processing Script | Cleans, anonymizes, and transforms the collected data. |
+| Processed Dataset | Contains structured data prepared for analysis. |
+| Jupyter Notebook | Performs exploratory and statistical analysis. |
+| Visualization Script | Generates scientific charts and figures. |
+| GitHub Repository | Stores source code, documentation, and approved research outputs. |
