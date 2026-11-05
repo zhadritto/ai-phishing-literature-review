@@ -136,6 +136,9 @@ The average detection recall for AI-generated phishing emails was [X%], with a 9
 
 This metric represents the proportion of AI-generated phishing emails that participants correctly identified as phishing.
 
+![Figure 1. Detection Recall for AI-Generated Phishing Emails](../reports/figures/fig1_ai_detection.png)
+
+
 **Figure 1.** Detection Recall for AI-Generated Phishing Emails.
 
 ### 4.3 False Positive Rate
@@ -143,6 +146,8 @@ This metric represents the proportion of AI-generated phishing emails that parti
 The average false positive rate for legitimate emails was [Y%], with a 95% bootstrap confidence interval of [lower bound, upper bound].
 
 This result represents the proportion of legitimate emails incorrectly identified as phishing.
+
+![Figure 2. False Positive Rate for Legitimate Emails](../reports/figures/fig2_false_positive_rate.png)
 
 **Figure 2.** False Positive Rate for Legitimate Emails.
 
@@ -153,6 +158,9 @@ Participant-level detection recall was also examined according to self-reported 
 **Figure 3.** AI Phishing Detection by Self-Reported Cybersecurity Knowledge.
 
 The visualization provides an exploratory view of differences in detection performance across cybersecurity knowledge groups. These differences should be interpreted cautiously and do not establish a causal relationship.
+
+![Figure 3. AI Phishing Detection by Cybersecurity Knowledge](../reports/figures/fig3_cyber_knowledge.png)
+
 
 ## 5. Discussion
 
