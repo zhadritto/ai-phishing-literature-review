@@ -68,7 +68,9 @@ ax.bar(
     capsize=5
 )
 ax.set_ylabel("Detection Recall (%)")
-ax.set_title("Detection of AI-Generated Phishing Emails")
+ax.set_title(
+    f"AI Phishing Detection Recall (n={len(ai)} participants)"
+)
 ax.set_ylim(0, 100)
 plt.tight_layout()
 plt.savefig(f"{OUTPUT}/fig1_ai_detection.png", dpi=300)
@@ -113,6 +115,8 @@ ai_data = participant_scores[
     participant_scores["email_type"] == "ai_phishing"
 ].copy()
 
+ai_data["accuracy"] = ai_data["accuracy"] * 100
+
 fig, ax = plt.subplots(figsize=(9, 5))
 sns.stripplot(
     data=ai_data,
@@ -122,7 +126,8 @@ sns.stripplot(
     alpha=0.65,
     ax=ax
 )
-ax.set_ylabel("Participant Detection Recall")
+ax.set_ylabel("Detection Recall (%)")
+ax.set_ylim(0, 100)
 ax.set_xlabel("Self-rated Cybersecurity Knowledge")
 ax.set_title("AI Phishing Detection by Cybersecurity Knowledge")
 ax.set_ylim(0, 1)
