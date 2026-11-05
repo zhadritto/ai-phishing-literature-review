@@ -1,57 +1,89 @@
+
 import json
+import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
 
 sns.set_theme(style="whitegrid", palette="colorblind")
-plt.rcParams.update({'font.size': 12, 'figure.dpi': 300})
 
-os.makedirs("reports/figures", exist_ok=True)
-rows = [json.loads(l) for l in open("data/raw/test_run.jsonl", encoding="utf-8")]
+INPUT = "data/processed/responses.jsonl"
+OUTPUT = "reports/figures"
 
-groups = ["Низкие", "Средние", "Высокие"]
-recalls = []
-errors = []
+os.makedirs(OUTPUT, exist_ok=True)
 
-for g in groups:
-    subset = [r["correct"] for r in rows if r["email_type"] == "ai_phishing" and g in r["cyber_knowledge"]]
-    if subset:
-        recalls.append(np.mean(subset) * 100)
-        errors.append(np.std(subset) / np.sqrt(len(subset)) * 196) # 95% CI
-    else:
-        recalls.append(0)
-        errors.append(0)
+with open(INPUT, encoding="utf-8") as f:
+    rows = [json.loads(line) for line in f if line.strip()]
+
+df = pd.DataFrame(rows)
+
+# Figure 1: Detection rate by email type
+summary = df.groupby("email_type")["correct"].mean() * 100
 
 fig, ax = plt.subplots(figsize=(8, 5))
-ax.bar(groups, recalls, yerr=errors, capsize=5, color='#0072B2', edgecolor='black', alpha=0.8)
-ax.set_ylabel("Detection Recall (%)")
-ax.set_xlabel("Self-rated Cyber Knowledge")
-ax.set_ylim(0, 110)
-ax.set_title("AI Phishing Detection by Cyber Knowledge")
+summary.plot(kind="bar", ax=ax)
+ax.set_ylabel("Correct Detection (%)")
+ax.set_xlabel("Email Type")
+ax.set_title("Detection Rate by Email Type")
+ax.set_ylim(0, 100)
 plt.tight_layout()
-plt.savefig("reports/figures/fig1_latency_vs_load.pdf")
-plt.savefig("reports/figures/fig1_latency_vs_load.png", dpi=300)
+plt.savefig(f"{OUTPUT}/fig1_detection_rate.png", dpi=300)
+plt.savefig(f"{OUTPUT}/fig1_detection_rate.pdf")
 plt.close()
 
-participant_scores = {}
-for r in rows:
-    pid = r["participant_id"]
-    if pid not in participant_scores:
-        participant_scores[pid] = 0
-    participant_scores[pid] += r["correct"]
+# Figure 2: Participant performance
+participant_scores = (
+    df.groupby(["participant_id", "email_type"])["correct"]
+    .mean()
+    .reset_index()
+)
 
-scores = list(participant_scores.values())
-
-fig, ax = plt.subplots(figsize=(6, 5))
-sns.boxplot(y=scores, color='#009E73', width=0.4, ax=ax)
-sns.stripplot(y=scores, color='black', alpha=0.5, jitter=True, ax=ax)
-ax.set_ylabel("Number of Correct Answers (out of 12)")
-ax.set_xlabel("Participants (N=27)")
-ax.set_title("Participant Performance Distribution")
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.boxplot(
+    data=participant_scores,
+    x="email_type",
+    y="correct",
+    ax=ax
+)
+sns.stripplot(
+    data=participant_scores,
+    x="email_type",
+    y="correct",
+    color="black",
+    alpha=0.5,
+    ax=ax
+)
+ax.set_ylabel("Correct Detection Rate")
+ax.set_xlabel("Email Type")
+ax.set_title("Participant Performance by Email Type")
 plt.tight_layout()
-plt.savefig("reports/figures/fig2_distribution_boxplot.pdf")
-plt.savefig("reports/figures/fig2_distribution_boxplot.png", dpi=300)
+plt.savefig(f"{OUTPUT}/fig2_participant_performance.png", dpi=300)
+plt.savefig(f"{OUTPUT}/fig2_participant_performance.pdf")
 plt.close()
 
-print("✅ Графики сохранены в reports/figures/ (форматы .pdf и .png)")
+# Figure 3: Self-rated cybersecurity knowledge
+knowledge = (
+    df.groupby("cyber_knowledge")["correct"]
+    .mean()
+    .mul(100)
+    .reset_index()
+)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.barplot(
+    data=knowledge,
+    x="cyber_knowledge",
+    y="correct",
+    ax=ax
+)
+ax.set_ylabel("Correct Detection (%)")
+ax.set_xlabel("Self-rated Cybersecurity Knowledge")
+ax.set_title("Detection Rate by Cybersecurity Knowledge")
+ax.tick_params(axis="x", rotation=20)
+plt.tight_layout()
+plt.savefig(f"{OUTPUT}/fig3_cyber_knowledge.png", dpi=300)
+plt.savefig(f"{OUTPUT}/fig3_cyber_knowledge.pdf")
+plt.close()
+
+print("Three figures saved in", OUTPUT)
