@@ -26,12 +26,12 @@ os.makedirs("data/processed", exist_ok=True)
 def parse_answer(answer):
     answer = answer.strip().lower()
 
-    if answer in ("да", "является фишингом", "фишинг"):
+    if answer in {"да", "yes"}:
         return "phishing"
-    if answer in ("нет", "не является фишингом", "не фишинг"):
+    if answer in {"нет", "no"}:
         return "legitimate"
 
-    return None
+    raise ValueError(f"Unknown answer option: {answer!r}")
 
 records = []
 
@@ -40,11 +40,10 @@ with open(INPUT_CSV, encoding="utf-8-sig") as f:
 
     for i, row in enumerate(reader, start=1):
         for column, true_type in EMAIL_MAP.items():
-            raw_answer = row.get(column, "")
-            prediction = parse_answer(raw_answer)
+            if column not in row:
+                raise ValueError(f"Missing CSV column: {column}")
 
-            if prediction is None:
-                continue
+            prediction = parse_answer(row[column])
 
             records.append({
                 "participant_id": f"P{i:02d}",
@@ -53,8 +52,7 @@ with open(INPUT_CSV, encoding="utf-8-sig") as f:
                 "predicted_label": prediction,
                 "correct": int(
                     (true_type == "ai_phishing" and prediction == "phishing")
-                    or
-                    (true_type == "legitimate" and prediction == "legitimate")
+                    or (true_type == "legitimate" and prediction == "legitimate")
                 ),
                 "cyber_knowledge": row.get(
                     "2. Как бы вы оценили свои знания в области кибербезопасности?", ""
@@ -68,6 +66,6 @@ with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
     for record in records:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-print(f"Processed participants: {i if records else 0}")
-print(f"Processed responses: {len(records)}")
+print(f"Participants: {i if records else 0}")
+print(f"Responses: {len(records)}")
 print(f"Saved to: {OUTPUT_JSONL}")
