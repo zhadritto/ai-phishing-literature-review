@@ -48,3 +48,7 @@ references/pdfs/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Private survey data and participant-level results
+data/raw/
+data/processed/student_responses_long.csv

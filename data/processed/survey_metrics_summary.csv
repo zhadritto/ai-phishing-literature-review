@@ -1,0 +1,2 @@
+﻿participants,email_questions,total_classifications,missing_answers,unique_participants,unique_emails,ground_truth_complete,accuracy
+27,12,324,0,27,12,True,0.7932098765432098
