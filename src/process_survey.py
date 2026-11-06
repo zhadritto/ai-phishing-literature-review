@@ -1,4 +1,3 @@
-
 import csv
 import json
 from pathlib import Path
@@ -26,22 +25,9 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 EXPECTED_PARTICIPANTS = 27
 EXPECTED_EMAILS = 12
 
+# IMPORTANT: Confirm these positional indices match the exact column headers 
+# of the original private survey export before running against real data.
 EMAIL_COLUMNS = list(range(5, 17))
-
-ANSWER_MAP = {
-    "настоящее письмо": "legitimate",
-    "фишинговое": "phishing",
-    "фишинговое письмо": "phishing",
-    "фишинг": "phishing",
-    "да": "phishing",
-
-    "настоящее письмо": "legitimate",
-    "легитимное": "legitimate",
-    "легитимное письмо": "legitimate",
-    "не фишинговое": "legitimate",
-    "нефишинговое": "legitimate",
-    "нет": "legitimate",
-}
 
 
 # --------------------------------------------------
@@ -66,9 +52,9 @@ if len(df) != EXPECTED_PARTICIPANTS:
         f"participants, found {len(df)}."
     )
 
-if len(df.columns) < 17:
+if len(df.columns) < 18:
     raise ValueError(
-        "The CSV must contain at least 17 columns."
+        "The CSV must contain at least 18 columns."
     )
 
 
@@ -99,6 +85,8 @@ if email_data.shape[1] - 1 != EXPECTED_EMAILS:
 # EXTRACT PARTICIPANT METADATA
 # --------------------------------------------------
 
+# IMPORTANT: Confirm these positional indices match the exact column headers 
+# of the original private survey export before running against real data.
 metadata = pd.DataFrame({
     "participant_id": email_data["participant_id"],
     "age_group": df.iloc[:, 2].astype("string"),
@@ -116,16 +104,33 @@ def normalize_answer(value):
     if pd.isna(value):
         return pd.NA
 
-    answer = str(value).strip().lower()
+    answer = str(value).strip().casefold()
 
-    if answer in ANSWER_MAP:
-        return ANSWER_MAP[answer]
+    exact_map = {
+        "настоящее письмо": "legitimate",
+        "легитимное": "legitimate",
+        "легитимное письмо": "legitimate",
+        "не фишинговое": "legitimate",
+        "нефишинговое": "legitimate",
+        "нет": "legitimate",
+        "фишинговое": "phishing",
+        "фишинговое письмо": "phishing",
+        "фишинг": "phishing",
+        "да": "phishing",
+    }
+
+    if answer in exact_map:
+        return exact_map[answer]
+
+    # Check negative wording before the substring "фишинг".
+    if "не" in answer and "фишинг" in answer:
+        return "legitimate"
+
+    if "легитим" in answer or "настоящее" in answer:
+        return "legitimate"
 
     if "фишинг" in answer:
         return "phishing"
-
-    if "легитим" in answer or "не фиш" in answer:
-        return "legitimate"
 
     return pd.NA
 
@@ -282,19 +287,25 @@ long_data.drop(
     inplace=True
 )
 
-if long_data["true_label"].notna().all():
+ground_truth_complete = bool(
+    long_data["true_label"].notna().all()
+    and long_data["email_source"].notna().all()
+    and long_data["email_source"].astype("string").str.strip().ne("").all()
+)
 
+predictions_complete = bool(
+    long_data["predicted_label"].notna().all()
+)
+
+if ground_truth_complete and predictions_complete:
     long_data["is_correct"] = (
-        long_data["predicted_label"]
-        == long_data["true_label"]
+        long_data["predicted_label"] == long_data["true_label"]
     )
-
 else:
-
     print()
     print(
-        "NOTE: Ground-truth labels are incomplete. "
-        "Accuracy will not be calculated."
+        "NOTE: A complete verified answer key, source mapping, and response set "
+        "are required. Accuracy will not be calculated."
     )
 
 
@@ -316,133 +327,3 @@ email_summary = (
 for label in ["phishing", "legitimate"]:
     if label not in email_summary.columns:
         email_summary[label] = 0
-
-email_summary["total_responses"] = (
-    email_summary["phishing"]
-    + email_summary["legitimate"]
-)
-
-email_summary["phishing_percentage"] = (
-    email_summary["phishing"]
-    / email_summary["total_responses"]
-    * 100
-)
-
-
-# --------------------------------------------------
-# DEMOGRAPHICS SUMMARY
-# --------------------------------------------------
-
-demographic_frames = []
-
-for column in [
-    "age_group",
-    "cyber_knowledge",
-    "phishing_experience",
-    "first_indicator",
-]:
-
-    summary = (
-        metadata[column]
-        .value_counts(dropna=False)
-        .rename_axis("category")
-        .reset_index(name="count")
-    )
-
-    summary.insert(0, "variable", column)
-
-    demographic_frames.append(summary)
-
-demographics_summary = pd.concat(
-    demographic_frames,
-    ignore_index=True
-)
-
-
-# --------------------------------------------------
-# SURVEY METRICS
-# --------------------------------------------------
-
-metrics = {
-    "participants": len(df),
-    "email_questions": EXPECTED_EMAILS,
-    "total_classifications": len(long_data),
-    "missing_answers": int(
-        long_data["predicted_label"].isna().sum()
-    ),
-    "unique_participants": int(
-        long_data["participant_id"].nunique()
-    ),
-    "unique_emails": int(
-        long_data["email_id"].nunique()
-    ),
-    "ground_truth_complete": bool(
-        long_data["true_label"].notna().all()
-    ),
-}
-
-if metrics["ground_truth_complete"]:
-
-    metrics["accuracy"] = float(
-        long_data["is_correct"].mean()
-    )
-
-else:
-
-    metrics["accuracy"] = None
-
-
-# --------------------------------------------------
-# SAVE OUTPUT FILES
-# --------------------------------------------------
-
-long_data.to_csv(
-    OUTPUT_DIR / "student_responses_long.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-
-email_summary.to_csv(
-    OUTPUT_DIR / "email_classification_summary.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-
-demographics_summary.to_csv(
-    OUTPUT_DIR / "survey_demographics_summary.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-
-pd.DataFrame(
-    [metrics]
-).to_csv(
-    OUTPUT_DIR / "survey_metrics_summary.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-
-
-# --------------------------------------------------
-# FINISH
-# --------------------------------------------------
-
-print()
-print("SURVEY PROCESSING COMPLETED")
-print("---------------------------")
-print("Participants:", metrics["participants"])
-print("Email questions:", EXPECTED_EMAILS)
-print("Classifications:", metrics["total_classifications"])
-print("Missing answers:", metrics["missing_answers"])
-print("Ground truth complete:", metrics["ground_truth_complete"])
-print("Accuracy:", metrics["accuracy"])
-
-print()
-print("FILES CREATED:")
-print("- student_responses_long.csv")
-print("- email_classification_summary.csv")
-print("- survey_demographics_summary.csv")
-print("- survey_metrics_summary.csv")
-
-print()
-print("Original survey CSV was not modified.")
