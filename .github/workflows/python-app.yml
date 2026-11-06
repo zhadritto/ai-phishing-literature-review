@@ -1,5 +1,4 @@
-
-name: Python project checks
+name: Project validation
 
 on:
   push:
@@ -12,40 +11,36 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy pandas matplotlib seaborn
+          pip install -r requirements.txt
 
-      - name: Check Python syntax
+      - name: Compile Python source files
+        run: python -m compileall -q src
+
+      - name: Run synthetic benchmark
+        run: python src/benchmark.py
+
+      - name: Validate and visualize public survey aggregates
+        run: python src/visualize_survey.py
+
+      - name: Check generated outputs
         run: |
-          python -m py_compile src/convert_responses.py
-          python -m py_compile src/process_data.py
-          python -m py_compile src/visualize.py
-
-      - name: Convert survey responses
-        run: python src/convert_responses.py
-
-      - name: Calculate metrics
-        run: python src/process_data.py
-
-      - name: Generate figures
-        run: python src/visualize.py
-
-      - name: Upload figures
-        uses: actions/upload-artifact@v4
-        with:
-          name: research-figures
-          path: reports/figures/
+          test -s results/sample_metrics.json
+          test -s reports/figures/email_response_distribution.png
+          test -s reports/figures/email_response_distribution.pdf
+          test -s reports/figures/phishing_selection_percentage_by_email.png
+          test -s reports/figures/phishing_selection_percentage_by_email.pdf
