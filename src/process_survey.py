@@ -4,17 +4,25 @@ from pathlib import Path
 import pandas as pd
 
 
+# ==================================================
+# PROJECT PATHS
+# ==================================================
+
 ROOT = Path(__file__).resolve().parents[1]
 
 INPUT_FILE = ROOT / "data" / "raw" / "responses.csv"
-ANSWER_KEY_FILE = ROOT / "data" / "metadata" / "email_answer_key.csv"
+
+ANSWER_KEY_FILE = (
+    ROOT / "data" / "metadata" / "email_answer_key.csv"
+)
+
 OUTPUT_DIR = ROOT / "data" / "processed"
 
 EXPECTED_EMAILS = 12
 
-# Google Forms export, zero-based positions
+# Google Forms column positions (zero-based).
 EMAIL_START = 5
-EMAIL_END = 17  # exclusive
+EMAIL_END = 17
 
 METADATA_COLUMNS = {
     "age_group": 2,
@@ -25,8 +33,16 @@ METADATA_COLUMNS = {
 }
 
 
+# ==================================================
+# ANSWER NORMALIZATION
+# ==================================================
+
 def normalize_answer(value):
-    """Convert Russian survey options into standard labels."""
+    """
+    Normalize Russian Google Forms answers
+    into standard English classification labels.
+    """
+
     if pd.isna(value) or str(value).strip() == "":
         return pd.NA
 
@@ -45,124 +61,252 @@ def normalize_answer(value):
     return mapping.get(answer, pd.NA)
 
 
-def load_answer_key(path):
-    key = pd.read_csv(path, dtype=str).fillna("")
+# ==================================================
+# LOAD AND VALIDATE ANSWER KEY
+# ==================================================
 
-    required = {"email_id", "true_label", "email_source"}
-    if not required.issubset(key.columns):
-        raise ValueError(
-            f"Answer key must contain: {sorted(required)}"
-        )
-
-    key["email_id"] = key["email_id"].str.strip()
-    key["true_label"] = key["true_label"].str.strip().str.lower()
-    key["email_source"] = key["email_source"].str.strip().str.lower()
-
-    expected_ids = {
-        f"email_{i:02d}" for i in range(1, EXPECTED_EMAILS + 1)
-    }
-
-    if key["email_id"].duplicated().any():
-        raise ValueError("Duplicate email_id in answer key.")
-
-    if set(key["email_id"]) != expected_ids:
-        raise ValueError("Answer key must contain email_01 to email_12.")
-
-    if not set(key["true_label"]).issubset({"phishing", "legitimate"}):
-        raise ValueError("Invalid true_label in answer key.")
-
-    if key["true_label"].eq("").any():
-        raise ValueError("Every email must have a verified true_label.")
-
-    if not set(key["email_source"]).issubset(
-        {"ai_generated", "human_written", "unknown"}
-    ):
-        raise ValueError("Invalid email_source in answer key.")
-
-    return key
-
-
-def main():
-    if not INPUT_FILE.exists():
-        raise FileNotFoundError(
-            f"Private survey export not found: {INPUT_FILE}"
-        )
+def load_answer_key():
 
     if not ANSWER_KEY_FILE.exists():
         raise FileNotFoundError(
             f"Answer key not found: {ANSWER_KEY_FILE}"
         )
 
-    # Keep positional columns because Google Forms repeats question names.
-    raw = pd.read_csv(INPUT_FILE, encoding="utf-8-sig")
-
-    if raw.shape[1] < 19:
-        raise ValueError(
-            f"Expected at least 19 columns, found {raw.shape[1]}."
-        )
-
-    # Remove completely empty trailing columns, if any.
-    raw = raw.dropna(axis=1, how="all")
-
-    if raw.shape[1] < 19:
-        raise ValueError(
-            "Required survey columns are missing after empty-column removal."
-        )
-
-    email_data = raw.iloc[:, EMAIL_START:EMAIL_END].copy()
-
-    if email_data.shape[1] != EXPECTED_EMAILS:
-        raise ValueError("Exactly 12 email questions are required.")
-
-    email_data.columns = [
-        f"email_{i:02d}" for i in range(1, EXPECTED_EMAILS + 1)
-    ]
-
-    # Create pseudonymous IDs; timestamps are not exported.
-    email_data.insert(
-        0,
-        "participant_id",
-        [f"P{i:03d}" for i in range(1, len(raw) + 1)]
+    key = pd.read_csv(
+        ANSWER_KEY_FILE,
+        dtype=str,
+        keep_default_na=False
     )
 
-    metadata = pd.DataFrame({
-        "participant_id": email_data["participant_id"],
-        "age_group": raw.iloc[:, METADATA_COLUMNS["age_group"]],
-        "cyber_knowledge": raw.iloc[:, METADATA_COLUMNS["cyber_knowledge"]],
-        "phishing_experience": raw.iloc[
-            :, METADATA_COLUMNS["phishing_experience"]
-        ],
-        "first_indicator": raw.iloc[
-            :, METADATA_COLUMNS["first_indicator"]
-        ],
-        "confidence": raw.iloc[:, METADATA_COLUMNS["confidence"]],
-    })
+    required = {
+        "email_id",
+        "true_label",
+        "email_source"
+    }
 
-    for column in email_data.columns:
-        if column != "participant_id":
-            email_data[column] = email_data[column].apply(normalize_answer)
-
-    invalid_values = []
-    for column in email_data.columns:
-        if column == "participant_id":
-            continue
-
-        original = raw.iloc[:, EMAIL_START + int(column.split("_")[1]) - 1]
-        normalized = email_data[column]
-
-        invalid = original.notna() & original.astype(str).str.strip().ne("")
-        invalid &= normalized.isna()
-
-        if invalid.any():
-            invalid_values.extend(original[invalid].astype(str).unique().tolist())
-
-    if invalid_values:
+    if not required.issubset(key.columns):
         raise ValueError(
-            f"Unrecognized answer options: {sorted(set(invalid_values))}"
+            f"Answer key must contain: {sorted(required)}"
         )
 
-    long_data = email_data.melt(
-        id_vars="participant_id",
+    key["email_id"] = key["email_id"].str.strip()
+
+    key["true_label"] = (
+        key["true_label"].str.strip().str.lower()
+    )
+
+    key["email_source"] = (
+        key["email_source"].str.strip().str.lower()
+    )
+
+    expected_ids = {
+        f"email_{i:02d}"
+        for i in range(1, EXPECTED_EMAILS + 1)
+    }
+
+    if key["email_id"].duplicated().any():
+        raise ValueError("Duplicate email IDs in answer key.")
+
+    if set(key["email_id"]) != expected_ids:
+        raise ValueError(
+            "Answer key must contain exactly email_01 to email_12."
+        )
+
+    if not set(key["true_label"]).issubset(
+        {"phishing", "legitimate"}
+    ):
+        raise ValueError("Invalid ground-truth labels.")
+
+    if not set(key["email_source"]).issubset(
+        {"ai_generated", "human_written", "unknown"}
+    ):
+        raise ValueError("Invalid email authorship categories.")
+
+    if key[
+        ["true_label", "email_source"]
+    ].eq("").any().any():
+        raise ValueError(
+            "Ground truth and source fields cannot be empty."
+        )
+
+    # Verify the expected classification and authorship mapping.
+    expected_mapping = {
+        "email_01": ("phishing", "ai_generated"),
+        "email_02": ("legitimate", "unknown"),
+        "email_03": ("phishing", "human_written"),
+        "email_04": ("legitimate", "unknown"),
+        "email_05": ("phishing", "ai_generated"),
+        "email_06": ("legitimate", "unknown"),
+        "email_07": ("phishing", "human_written"),
+        "email_08": ("legitimate", "unknown"),
+        "email_09": ("phishing", "ai_generated"),
+        "email_10": ("legitimate", "unknown"),
+        "email_11": ("phishing", "human_written"),
+        "email_12": ("legitimate", "unknown"),
+    }
+
+    for _, row in key.iterrows():
+
+        expected = expected_mapping[row["email_id"]]
+
+        actual = (
+            row["true_label"],
+            row["email_source"]
+        )
+
+        if actual != expected:
+            raise ValueError(
+                f"Incorrect mapping for {row['email_id']}: "
+                f"{actual}; expected {expected}."
+            )
+
+    return key
+
+
+# ==================================================
+# LOAD RAW SURVEY
+# ==================================================
+
+def load_survey():
+
+    if not INPUT_FILE.exists():
+        raise FileNotFoundError(
+            f"Survey file not found: {INPUT_FILE}"
+        )
+
+    # Duplicate Google Forms headings are handled by position,
+    # not by column names.
+    df = pd.read_csv(
+        INPUT_FILE,
+        encoding="utf-8-sig"
+    )
+
+    if len(df.columns) < 19:
+        raise ValueError(
+            f"Expected at least 19 columns, found {len(df.columns)}."
+        )
+
+    if df.empty:
+        raise ValueError("The survey file contains no participants.")
+
+    return df
+
+
+# ==================================================
+# CREATE PARTICIPANT METADATA
+# ==================================================
+
+def extract_metadata(raw):
+
+    metadata = pd.DataFrame()
+
+    metadata["participant_id"] = [
+        f"P{i:03d}"
+        for i in range(1, len(raw) + 1)
+    ]
+
+    metadata["age_group"] = (
+        raw.iloc[:, METADATA_COLUMNS["age_group"]]
+    )
+
+    metadata["cyber_knowledge"] = (
+        raw.iloc[:, METADATA_COLUMNS["cyber_knowledge"]]
+    )
+
+    metadata["phishing_experience"] = (
+        raw.iloc[:, METADATA_COLUMNS["phishing_experience"]]
+    )
+
+    metadata["first_indicator"] = (
+        raw.iloc[:, METADATA_COLUMNS["first_indicator"]]
+    )
+
+    metadata["confidence"] = pd.to_numeric(
+        raw.iloc[:, METADATA_COLUMNS["confidence"]],
+        errors="coerce"
+    )
+
+    invalid_confidence = metadata["confidence"].notna() & (
+        ~metadata["confidence"].between(1, 5)
+    )
+
+    if invalid_confidence.any():
+        raise ValueError(
+            "Confidence values must be between 1 and 5."
+        )
+
+    return metadata
+
+
+# ==================================================
+# VALIDATE SURVEY ANSWERS
+# ==================================================
+
+def extract_email_answers(raw):
+
+    email_answers = raw.iloc[
+        :,
+        EMAIL_START:EMAIL_END
+    ].copy()
+
+    if email_answers.shape[1] != EXPECTED_EMAILS:
+        raise ValueError(
+            "The survey must contain exactly 12 email questions."
+        )
+
+    email_answers.columns = [
+        f"email_{i:02d}"
+        for i in range(1, EXPECTED_EMAILS + 1)
+    ]
+
+    for column in email_answers.columns:
+
+        original = email_answers[column].copy()
+
+        normalized = original.apply(normalize_answer)
+
+        invalid = (
+            original.notna()
+            & original.astype(str).str.strip().ne("")
+            & normalized.isna()
+        )
+
+        if invalid.any():
+
+            invalid_values = (
+                original[invalid].astype(str).unique().tolist()
+            )
+
+            raise ValueError(
+                f"Unrecognized answers in {column}: "
+                f"{invalid_values}"
+            )
+
+        email_answers[column] = normalized
+
+    return email_answers
+
+
+# ==================================================
+# CONVERT WIDE DATA TO LONG FORMAT
+# ==================================================
+
+def convert_to_long_format(
+    email_answers,
+    metadata,
+    answer_key
+):
+
+    email_answers = email_answers.copy()
+
+    email_answers.insert(
+        0,
+        "participant_id",
+        metadata["participant_id"]
+    )
+
+    long_data = email_answers.melt(
+        id_vars=["participant_id"],
         var_name="email_id",
         value_name="predicted_label"
     )
@@ -174,8 +318,6 @@ def main():
         validate="many_to_one"
     )
 
-    answer_key = load_answer_key(ANSWER_KEY_FILE)
-
     long_data = long_data.merge(
         answer_key,
         on="email_id",
@@ -183,172 +325,232 @@ def main():
         validate="many_to_one"
     )
 
+    # Missing answers remain missing.
     long_data["is_correct"] = (
-        long_data["predicted_label"] == long_data["true_label"]
+        long_data["predicted_label"]
+        == long_data["true_label"]
+    )
+
+    long_data["is_correct"] = (
+        long_data["is_correct"].astype("boolean")
     )
 
     long_data.loc[
-        long_data["predicted_label"].isna(), "is_correct"
+        long_data["predicted_label"].isna(),
+        "is_correct"
     ] = pd.NA
 
-    # Quality checks
-    n_participants = long_data["participant_id"].nunique()
-    n_rows = len(long_data)
-    n_missing = int(long_data["predicted_label"].isna().sum())
+    return long_data
 
-    expected_rows = n_participants * EXPECTED_EMAILS
 
-    if n_rows != expected_rows:
-        raise ValueError("Unexpected number of participant-email records.")
+# ==================================================
+# CREATE EMAIL SUMMARY
+# ==================================================
 
-    if long_data.duplicated(["participant_id", "email_id"]).any():
-        raise ValueError("Duplicate participant-email records detected.")
+def create_email_summary(long_data):
 
-    # Per-email aggregate results
-    email_summary = (
-        long_data.groupby(
-            ["email_id", "true_label", "email_source"],
-            dropna=False
+    results = []
+
+    for email_id, group in long_data.groupby("email_id"):
+
+        valid = group.dropna(
+            subset=["predicted_label"]
         )
-        .agg(
-            total_responses=("predicted_label", "count"),
-            phishing_selections=(
-                "predicted_label",
-                lambda x: (x == "phishing").sum()
-            ),
-            legitimate_selections=(
-                "predicted_label",
-                lambda x: (x == "legitimate").sum()
-            ),
-            correct_responses=("is_correct", "sum"),
+
+        total = len(valid)
+
+        correct = int(
+            valid["is_correct"].sum()
+        ) if total else 0
+
+        phishing_count = int(
+            (valid["predicted_label"] == "phishing").sum()
         )
-        .reset_index()
-    )
 
-    email_summary["accuracy_percent"] = (
-        email_summary["correct_responses"]
-        / email_summary["total_responses"]
-        * 100
-    )
+        legitimate_count = int(
+            (valid["predicted_label"] == "legitimate").sum()
+        )
 
-    email_summary["phishing_selection_percent"] = (
-        email_summary["phishing_selections"]
-        / email_summary["total_responses"]
-        * 100
-    )
+        key_row = group.iloc[0]
 
-    # Overall confusion matrix counts
+        results.append({
+            "email_id": email_id,
+            "true_label": key_row["true_label"],
+            "email_source": key_row["email_source"],
+            "total_responses": total,
+            "missing_responses": len(group) - total,
+            "phishing_selections": phishing_count,
+            "legitimate_selections": legitimate_count,
+            "correct_responses": correct,
+            "accuracy": (
+                correct / total if total else pd.NA
+            ),
+            "accuracy_percent": (
+                correct / total * 100 if total else pd.NA
+            )
+        })
+
+    return pd.DataFrame(results).sort_values("email_id")
+
+
+# ==================================================
+# CREATE PARTICIPANT SUMMARY
+# ==================================================
+
+def create_participant_summary(long_data):
+
     valid = long_data.dropna(
-        subset=["predicted_label", "true_label"]
+        subset=["is_correct"]
     )
 
-    tp = int(
-        (
-            (valid["true_label"] == "phishing")
-            & (valid["predicted_label"] == "phishing")
-        ).sum()
-    )
-    fn = int(
-        (
-            (valid["true_label"] == "phishing")
-            & (valid["predicted_label"] == "legitimate")
-        ).sum()
-    )
-    fp = int(
-        (
-            (valid["true_label"] == "legitimate")
-            & (valid["predicted_label"] == "phishing")
-        ).sum()
-    )
-    tn = int(
-        (
-            (valid["true_label"] == "legitimate")
-            & (valid["predicted_label"] == "legitimate")
-        ).sum()
-    )
-
-    def ratio(num, den):
-        return num / den if den else float("nan")
-
-    accuracy = ratio(tp + tn, tp + tn + fp + fn)
-    precision = ratio(tp, tp + fp)
-    recall = ratio(tp, tp + fn)
-    specificity = ratio(tn, tn + fp)
-    fpr = ratio(fp, fp + tn)
-    f1 = ratio(
-        2 * precision * recall,
-        precision + recall
-    ) if precision + recall else float("nan")
-
-    overall_metrics = pd.DataFrame([
-        ["Accuracy", tp + tn, tp + tn + fp + fn, accuracy],
-        ["Precision", tp, tp + fp, precision],
-        ["Phishing Recall", tp, tp + fn, recall],
-        ["Specificity", tn, tn + fp, specificity],
-        ["False Positive Rate", fp, fp + tn, fpr],
-        ["F1-score", 2 * tp, 2 * tp + fp + fn, f1],
-    ], columns=["metric", "numerator", "denominator", "value"])
-
-    # Recall by phishing authorship group
-    phishing_only = valid[valid["true_label"] == "phishing"]
-
-    source_metrics = (
-        phishing_only.groupby("email_source")
-        .apply(
-            lambda group: pd.Series({
-                "correct": (
-                    group["predicted_label"] == "phishing"
-                ).sum(),
-                "total": len(group),
-                "recall": (
-                    group["predicted_label"] == "phishing"
-                ).mean(),
-            }),
-            include_groups=False
+    summary = (
+        valid.groupby("participant_id")
+        .agg(
+            valid_classifications=("is_correct", "count"),
+            correct_classifications=("is_correct", "sum"),
+            accuracy=("is_correct", "mean")
         )
         .reset_index()
     )
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    return summary
 
-    # Participant-level data remains local and is gitignored.
+
+# ==================================================
+# CREATE DESCRIPTIVE SUMMARIES
+# ==================================================
+
+def create_category_summary(metadata, column):
+
+    result = (
+        metadata[column]
+        .fillna("Missing")
+        .value_counts()
+        .rename_axis("category")
+        .reset_index(name="participants")
+    )
+
+    result["percentage"] = (
+        result["participants"]
+        / len(metadata)
+        * 100
+    )
+
+    return result
+
+
+# ==================================================
+# MAIN PROCESSING
+# ==================================================
+
+def main():
+
+    print("Loading survey data...")
+
+    raw = load_survey()
+
+    answer_key = load_answer_key()
+
+    metadata = extract_metadata(raw)
+
+    email_answers = extract_email_answers(raw)
+
+    long_data = convert_to_long_format(
+        email_answers,
+        metadata,
+        answer_key
+    )
+
+    email_summary = create_email_summary(
+        long_data
+    )
+
+    participant_summary = create_participant_summary(
+        long_data
+    )
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # Local participant-level dataset.
+    # This file must remain private.
     long_data.to_csv(
         OUTPUT_DIR / "student_responses_long.csv",
         index=False,
         encoding="utf-8-sig"
     )
 
-    # Publish only aggregate outputs.
+    # Approved aggregate outputs.
     email_summary.to_csv(
         OUTPUT_DIR / "email_classification_summary.csv",
         index=False,
         encoding="utf-8-sig"
     )
 
-    overall_metrics.to_csv(
-        OUTPUT_DIR / "overall_metrics_summary.csv",
-        index=False,
+    participant_summary.drop(
+        columns=["participant_id"]
+    ).describe().to_csv(
+        OUTPUT_DIR / "participant_performance_summary.csv",
         encoding="utf-8-sig"
     )
 
-    source_metrics.to_csv(
-        OUTPUT_DIR / "phishing_source_metrics.csv",
-        index=False,
-        encoding="utf-8-sig"
+    for column in [
+        "age_group",
+        "cyber_knowledge",
+        "phishing_experience",
+        "first_indicator"
+    ]:
+
+        create_category_summary(
+            metadata,
+            column
+        ).to_csv(
+            OUTPUT_DIR / f"{column}_summary.csv",
+            index=False,
+            encoding="utf-8-sig"
+        )
+
+    confidence_count = int(
+        metadata["confidence"].notna().sum()
     )
 
-    print("SURVEY PROCESSING COMPLETED")
-    print(f"Participants: {n_participants}")
-    print(f"Email questions: {EXPECTED_EMAILS}")
-    print(f"Total classifications: {n_rows}")
-    print(f"Missing classifications: {n_missing}")
-    print(f"Valid classifications: {len(valid)}")
-    print()
-    print(overall_metrics.to_string(index=False))
-    print()
-    print(source_metrics.to_string(index=False))
-    print()
-    print(f"Aggregate results saved to: {OUTPUT_DIR}")
+    missing_answers = int(
+        long_data["predicted_label"].isna().sum()
+    )
+
+    survey_summary = pd.DataFrame([{
+        "participants": len(metadata),
+        "email_questions": EXPECTED_EMAILS,
+        "total_classifications": len(long_data),
+        "valid_classifications": (
+            long_data["predicted_label"].notna().sum()
+        ),
+        "missing_answers": missing_answers,
+        "participants_with_confidence": confidence_count,
+        "ground_truth_complete": (
+            long_data["true_label"].notna().all()
+        )
+    }])
+
+    survey_summary.to_csv(
+        OUTPUT_DIR / "survey_metrics_summary.csv",
+        index=False
+    )
+
+    print("\nPROCESSING COMPLETED")
+
+    print("Participants:", len(metadata))
+    print("Email questions:", EXPECTED_EMAILS)
+    print("Total classifications:", len(long_data))
+    print("Missing classifications:", missing_answers)
+    print("Confidence responses:", confidence_count)
+
+    print("\nEmail summary:")
+    print(email_summary.to_string(index=False))
+
+    print("\nAggregate outputs saved to:", OUTPUT_DIR)
 
 
 if __name__ == "__main__":
