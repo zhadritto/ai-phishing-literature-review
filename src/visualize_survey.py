@@ -1,85 +1,549 @@
+
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
+
+# --------------------------------------------------
+# PROJECT CONFIGURATION
+# --------------------------------------------------
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT_FILE = ROOT / "data" / "processed" / "email_classification_summary.csv"
+
+INPUT_FILE = (
+    ROOT / "data" / "processed" / "student_responses_long.csv"
+)
+
 OUTPUT_DIR = ROOT / "reports" / "figures"
 
+RANDOM_SEED = 42
+BOOTSTRAP_ITERATIONS = 5000
 
-def main() -> None:
-    if not INPUT_FILE.is_file():
-        raise FileNotFoundError(f"Required aggregate file not found: {INPUT_FILE}")
+sns.set_theme(
+    style="whitegrid",
+    palette="colorblind",
+    font_scale=1.1
+)
+
+
+# --------------------------------------------------
+# DATA VALIDATION
+# --------------------------------------------------
+
+def load_data():
+
+    if not INPUT_FILE.exists():
+        raise FileNotFoundError(
+            f"Survey data not found: {INPUT_FILE}"
+        )
 
     df = pd.read_csv(INPUT_FILE)
+
     required = {
+        "participant_id",
         "email_id",
-        "legitimate",
-        "phishing",
-        "total_responses",
-        "phishing_percentage",
+        "true_label",
+        "predicted_label",
+        "email_source",
+        "is_correct",
+        "cyber_knowledge",
+        "phishing_experience",
+        "first_indicator"
     }
+
     missing = required - set(df.columns)
+
     if missing:
-        raise ValueError(f"Aggregate file is missing columns: {sorted(missing)}")
+        raise ValueError(
+            f"Missing columns: {sorted(missing)}"
+        )
 
-    if df.empty:
-        raise ValueError("Aggregate file contains no email examples.")
-    if df["email_id"].isna().any() or df["email_id"].duplicated().any():
-        raise ValueError("email_id values must be present and unique.")
+    df["true_label"] = (
+        df["true_label"].astype(str).str.lower().str.strip()
+    )
 
-    for column in ["legitimate", "phishing", "total_responses", "phishing_percentage"]:
-        df[column] = pd.to_numeric(df[column], errors="raise")
+    df["predicted_label"] = (
+        df["predicted_label"].astype(str).str.lower().str.strip()
+    )
 
-    if (df[["legitimate", "phishing", "total_responses"]] < 0).any().any():
-        raise ValueError("Response counts cannot be negative.")
-    if not (df["legitimate"] + df["phishing"] == df["total_responses"]).all():
-        raise ValueError("total_responses does not equal legitimate + phishing.")
-    if (df["total_responses"] == 0).any():
-        raise ValueError("Each email example must have at least one response.")
+    df["is_correct"] = (
+        df["is_correct"].astype("boolean")
+    )
 
-    calculated = df["phishing"] / df["total_responses"] * 100
-    if not (calculated.sub(df["phishing_percentage"]).abs() < 0.02).all():
-        raise ValueError("phishing_percentage does not match the response counts.")
+    if df.duplicated(
+        ["participant_id", "email_id"]
+    ).any():
+        raise ValueError(
+            "Duplicate participant-email records found."
+        )
 
-    df = df.sort_values("email_id").reset_index(drop=True)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    return df
 
-    # Figure 1: raw response counts by email. These are choices, not accuracy.
-    fig, ax = plt.subplots(figsize=(11, 6))
-    x = range(len(df))
-    ax.bar(x, df["phishing"], label="Selected: phishing")
-    ax.bar(x, df["legitimate"], bottom=df["phishing"], label="Selected: legitimate")
-    ax.set_xticks(list(x), df["email_id"], rotation=45, ha="right")
-    ax.set_ylabel("Number of participant selections")
-    ax.set_xlabel("Email example")
-    ax.set_title("Participant Response Counts by Email Example")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(OUTPUT_DIR / "email_response_distribution.png", dpi=300, bbox_inches="tight")
-    fig.savefig(OUTPUT_DIR / "email_response_distribution.pdf", bbox_inches="tight")
+
+# --------------------------------------------------
+# BOOTSTRAP CONFIDENCE INTERVAL
+# --------------------------------------------------
+
+def bootstrap_ci(
+    values,
+    iterations=BOOTSTRAP_ITERATIONS,
+    seed=RANDOM_SEED
+):
+
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+
+    if len(values) < 2:
+        return np.nan, np.nan
+
+    rng = np.random.default_rng(seed)
+
+    samples = rng.choice(
+        values,
+        size=(iterations, len(values)),
+        replace=True
+    )
+
+    bootstrap_means = samples.mean(axis=1)
+
+    lower, upper = np.percentile(
+        bootstrap_means,
+        [2.5, 97.5]
+    )
+
+    return lower, upper
+
+
+# --------------------------------------------------
+# SAVE FIGURES
+# --------------------------------------------------
+
+def save_figure(fig, filename):
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    fig.savefig(
+        OUTPUT_DIR / f"{filename}.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    fig.savefig(
+        OUTPUT_DIR / f"{filename}.pdf",
+        bbox_inches="tight"
+    )
+
     plt.close(fig)
 
-    # Figure 2: proportion choosing phishing for each example.
+
+# --------------------------------------------------
+# PARTICIPANT-LEVEL SUMMARY
+# --------------------------------------------------
+
+def participant_summary(df):
+
+    summary = (
+        df.groupby("participant_id")
+        .agg(
+            accuracy=("is_correct", "mean"),
+            cyber_knowledge=("cyber_knowledge", "first"),
+            phishing_experience=(
+                "phishing_experience", "first"
+            ),
+            first_indicator=("first_indicator", "first")
+        )
+        .reset_index()
+    )
+
+    return summary
+
+
+# --------------------------------------------------
+# FIGURE 1: ACCURACY BY EMAIL
+# --------------------------------------------------
+
+def plot_accuracy_by_email(df):
+
+    valid = df.dropna(
+        subset=["is_correct"]
+    ).copy()
+
+    rows = []
+
+    for email_id, group in valid.groupby("email_id"):
+
+        scores = group["is_correct"].astype(float).to_numpy()
+
+        lower, upper = bootstrap_ci(scores)
+
+        rows.append({
+            "email_id": email_id,
+            "accuracy": scores.mean() * 100,
+            "lower": lower * 100,
+            "upper": upper * 100,
+            "n": len(scores)
+        })
+
+    result = pd.DataFrame(rows).sort_values("email_id")
+
     fig, ax = plt.subplots(figsize=(10, 6))
-    plot_df = df.sort_values("phishing_percentage", ascending=True)
-    ax.barh(plot_df["email_id"], plot_df["phishing_percentage"])
-    ax.set_xlim(0, 100)
-    ax.set_xlabel("Participants selecting phishing (%)")
-    ax.set_ylabel("Email example")
-    ax.set_title("Phishing-Selection Percentage by Email Example")
-    for position, value in enumerate(plot_df["phishing_percentage"]):
-        ax.text(min(value + 1, 96), position, f"{value:.1f}%", va="center")
-    fig.tight_layout()
-    fig.savefig(OUTPUT_DIR / "phishing_selection_percentage_by_email.png", dpi=300, bbox_inches="tight")
-    fig.savefig(OUTPUT_DIR / "phishing_selection_percentage_by_email.pdf", bbox_inches="tight")
-    plt.close(fig)
 
-    print(f"Validated {len(df)} email examples and {int(df['total_responses'].sum())} classifications.")
-    print(f"Figures saved to: {OUTPUT_DIR}")
-    print("Note: figures show participant choices, not detection accuracy.")
+    ax.bar(
+        result["email_id"],
+        result["accuracy"],
+        color=sns.color_palette("colorblind")[0]
+    )
+
+    ax.errorbar(
+        result["email_id"],
+        result["accuracy"],
+        yerr=[
+            result["accuracy"] - result["lower"],
+            result["upper"] - result["accuracy"]
+        ],
+        fmt="none",
+        ecolor="black",
+        capsize=4
+    )
+
+    ax.set_xlabel("Email Example")
+    ax.set_ylabel("Classification Accuracy (%)")
+    ax.set_title("Detection Accuracy by Email")
+
+    ax.set_ylim(0, 100)
+
+    save_figure(fig, "survey_accuracy_by_email")
+
+
+# --------------------------------------------------
+# FIGURE 2: AI VS HUMAN PHISHING
+# --------------------------------------------------
+
+def plot_ai_vs_human_recall(df):
+
+    phishing = df[
+        (df["true_label"] == "phishing")
+        & (df["email_source"].isin(
+            ["ai_generated", "human_written"]
+        ))
+    ].copy()
+
+    phishing["detected"] = (
+        phishing["predicted_label"] == "phishing"
+    ).astype(float)
+
+    # Calculate one result per participant and source.
+    participant_recall = (
+        phishing.groupby(
+            ["participant_id", "email_source"]
+        )["detected"]
+        .mean()
+        .reset_index()
+    )
+
+    sources = [
+        "ai_generated",
+        "human_written"
+    ]
+
+    rows = []
+
+    for source in sources:
+
+        values = participant_recall.loc[
+            participant_recall["email_source"] == source,
+            "detected"
+        ].to_numpy()
+
+        if len(values) == 0:
+            continue
+
+        lower, upper = bootstrap_ci(values)
+
+        rows.append({
+            "source": source,
+            "recall": values.mean() * 100,
+            "lower": lower * 100,
+            "upper": upper * 100
+        })
+
+    result = pd.DataFrame(rows)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    positions = np.arange(len(result))
+
+    ax.bar(
+        positions,
+        result["recall"],
+        color=sns.color_palette("colorblind")[:len(result)]
+    )
+
+    ax.errorbar(
+        positions,
+        result["recall"],
+        yerr=[
+            result["recall"] - result["lower"],
+            result["upper"] - result["recall"]
+        ],
+        fmt="none",
+        ecolor="black",
+        capsize=5
+    )
+
+    ax.set_xticks(positions)
+
+    ax.set_xticklabels([
+        "AI-generated",
+        "Human-written"
+    ][:len(result)])
+
+    ax.set_ylabel("Phishing Detection Recall (%)")
+    ax.set_xlabel("Phishing Email Authorship")
+    ax.set_title("AI vs Human Phishing Detection")
+
+    ax.set_ylim(0, 100)
+
+    save_figure(fig, "survey_ai_vs_human_recall")
+
+
+# --------------------------------------------------
+# FIGURE 3: CONFUSION MATRIX
+# --------------------------------------------------
+
+def plot_confusion_matrix(df):
+
+    valid = df.dropna(
+        subset=["true_label", "predicted_label"]
+    )
+
+    actual = valid["true_label"]
+    predicted = valid["predicted_label"]
+
+    matrix = np.array([
+        [
+            ((actual == "phishing") &
+             (predicted == "phishing")).sum(),
+
+            ((actual == "phishing") &
+             (predicted == "legitimate")).sum()
+        ],
+        [
+            ((actual == "legitimate") &
+             (predicted == "phishing")).sum(),
+
+            ((actual == "legitimate") &
+             (predicted == "legitimate")).sum()
+        ]
+    ])
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+
+    sns.heatmap(
+        matrix,
+        annot=True,
+        fmt="d",
+        cmap="viridis",
+        linewidths=0.5,
+        xticklabels=[
+            "Predicted Phishing",
+            "Predicted Legitimate"
+        ],
+        yticklabels=[
+            "Actual Phishing",
+            "Actual Legitimate"
+        ],
+        ax=ax
+    )
+
+    ax.set_xlabel("Predicted Class")
+    ax.set_ylabel("Actual Class")
+    ax.set_title("Phishing Classification Confusion Matrix")
+
+    save_figure(fig, "survey_confusion_matrix")
+
+
+# --------------------------------------------------
+# FIGURE 4: CYBERSECURITY KNOWLEDGE
+# --------------------------------------------------
+
+def plot_cyber_knowledge(df):
+
+    summary = participant_summary(
+        df.dropna(subset=["is_correct"])
+    )
+
+    order = ["Низкие", "Средние", "Высокие"]
+
+    summary = summary[
+        summary["cyber_knowledge"].isin(order)
+    ]
+
+    rows = []
+
+    for level in order:
+
+        values = summary.loc[
+            summary["cyber_knowledge"] == level,
+            "accuracy"
+        ].to_numpy()
+
+        if len(values) == 0:
+            continue
+
+        lower, upper = bootstrap_ci(values)
+
+        rows.append({
+            "level": level,
+            "accuracy": values.mean() * 100,
+            "lower": lower * 100,
+            "upper": upper * 100
+        })
+
+    result = pd.DataFrame(rows)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    positions = np.arange(len(result))
+
+    ax.bar(
+        positions,
+        result["accuracy"],
+        color=sns.color_palette("colorblind")[:len(result)]
+    )
+
+    ax.errorbar(
+        positions,
+        result["accuracy"],
+        yerr=[
+            result["accuracy"] - result["lower"],
+            result["upper"] - result["accuracy"]
+        ],
+        fmt="none",
+        ecolor="black",
+        capsize=5
+    )
+
+    ax.set_xticks(positions)
+    ax.set_xticklabels(result["level"])
+
+    ax.set_xlabel("Self-Reported Cybersecurity Knowledge")
+    ax.set_ylabel("Mean Participant Accuracy (%)")
+    ax.set_title("Detection Accuracy by Cybersecurity Knowledge")
+
+    ax.set_ylim(0, 100)
+
+    save_figure(fig, "survey_cyber_knowledge")
+
+
+# --------------------------------------------------
+# FIGURE 5: PHISHING EXPERIENCE
+# --------------------------------------------------
+
+def plot_phishing_experience(df):
+
+    summary = participant_summary(
+        df.dropna(subset=["is_correct"])
+    )
+
+    result = (
+        summary.groupby("phishing_experience")["accuracy"]
+        .agg(["mean", "count"])
+        .reset_index()
+    )
+
+    result = result.dropna()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    ax.bar(
+        result["phishing_experience"],
+        result["mean"] * 100,
+        color=sns.color_palette("colorblind")[:len(result)]
+    )
+
+    ax.set_xlabel("Previous Phishing Experience")
+    ax.set_ylabel("Mean Participant Accuracy (%)")
+    ax.set_title("Detection Accuracy by Previous Experience")
+    ax.set_ylim(0, 100)
+
+    ax.tick_params(
+        axis="x",
+        rotation=20
+    )
+
+    save_figure(fig, "survey_phishing_experience")
+
+
+# --------------------------------------------------
+# FIGURE 6: FIRST DETECTION INDICATOR
+# --------------------------------------------------
+
+def plot_first_indicator(df):
+
+    summary = participant_summary(df)
+
+    indicators = (
+        summary["first_indicator"]
+        .dropna()
+        .value_counts()
+        .reset_index()
+    )
+
+    indicators.columns = [
+        "indicator",
+        "participants"
+    ]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    sns.barplot(
+        data=indicators,
+        x="participants",
+        y="indicator",
+        hue="indicator",
+        legend=False,
+        palette="colorblind",
+        ax=ax
+    )
+
+    ax.set_xlabel("Number of Participants")
+    ax.set_ylabel("First Detection Indicator")
+    ax.set_title("Indicators Used First by Participants")
+
+    save_figure(fig, "survey_first_indicator")
+
+
+# --------------------------------------------------
+# MAIN
+# --------------------------------------------------
+
+def main():
+
+    print("Loading survey data...")
+
+    df = load_data()
+
+    print("Participants:", df["participant_id"].nunique())
+    print("Classifications:", len(df))
+
+    print("Generating research figures...")
+
+    plot_accuracy_by_email(df)
+    plot_ai_vs_human_recall(df)
+    plot_confusion_matrix(df)
+    plot_cyber_knowledge(df)
+    plot_phishing_experience(df)
+    plot_first_indicator(df)
+
+    print("All figures exported successfully.")
+    print("Output directory:", OUTPUT_DIR)
 
 
 if __name__ == "__main__":
