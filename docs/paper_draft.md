@@ -1,217 +1,228 @@
-# Human Ability to Detect AI-Generated Phishing Emails: A Literature Review and Pilot Survey
+# AI-Generated vs Human-Written Phishing Emails: A User Detection Study
+
+**Zhadyra Kurmanova and Meirim Yersultan**
+
+Narxoz University  
+Email: zhadyra.kurmanova@narxoz.kz; meirim.yersultan@narxoz.kz
+
+GitHub: https://github.com/zhadritto/ai-phishing-literature-review
 
 ## Abstract
 
-The development of generative artificial intelligence has created new opportunities for cybercriminals to produce convincing phishing emails. As AI-generated messages become more sophisticated, identifying phishing attempts may become increasingly difficult for ordinary users.
+The increasing availability of generative artificial intelligence has created new challenges for email security. Large Language Models (LLMs) can generate fluent and convincing phishing messages, potentially making fraudulent emails more difficult for users to identify. This study examines human responses to phishing and legitimate email examples through a student survey.
 
-This study reviews existing research on human phishing detection and examines participants' ability to distinguish AI-generated phishing emails from legitimate emails. An anonymous online survey was conducted using 12 email examples: six AI-generated phishing emails and six legitimate emails. Participants classified each email as phishing or legitimate. Detection recall, false positive rate, and the relationship between self-reported cybersecurity knowledge and detection performance were examined.
+The survey included 27 participants who classified 12 email examples, resulting in 324 recorded classifications. Participants selected “phishing” in 181 cases (55.9%) and “legitimate” in 143 cases (44.1%). The results demonstrate variation in how participants judged individual email examples. However, these response frequencies do not represent detection accuracy because verified ground-truth labels and the source classification of each email were not available in the response export.
 
-The survey included [N] participants. The average detection recall for AI-generated phishing emails was [X%], while the false positive rate for legitimate emails was [Y%]. These results provide preliminary evidence about human detection performance in the context of AI-generated phishing.
+The study combines empirical survey analysis with existing research on human phishing detection and AI-generated malicious communication. Data processing and visualization were conducted using Python and Pandas. The findings provide descriptive insight into student judgements and highlight the importance of contextual awareness and careful email evaluation.
 
-**Keywords:** phishing, artificial intelligence, generative AI, cybersecurity awareness, human behavior, phishing detection.
+**Keywords:** AI-generated phishing, human detection, cybersecurity, large language models, phishing awareness, email security.
 
-## 1. Introduction
+## I. INTRODUCTION
 
-Phishing is a form of cyberattack in which attackers use deceptive messages to manipulate individuals into revealing sensitive information, clicking malicious links, or performing harmful actions. Email remains one of the common channels used in phishing attacks.
+### A. Background
 
-The development of generative artificial intelligence, particularly large language models (LLMs), has changed the way phishing messages can be created. AI tools can generate grammatically correct, personalized, and persuasive messages, potentially reducing the effort required to prepare phishing campaigns.
+Phishing remains an important cybersecurity threat because attackers use deceptive messages to manipulate individuals into disclosing sensitive information, opening malicious links, or performing unauthorized actions.
 
-Traditional phishing awareness often emphasizes suspicious links, spelling mistakes, unusual wording, and unexpected requests. However, AI-generated messages may contain fewer obvious linguistic errors, making these indicators less reliable.
+The development of Large Language Models has introduced new possibilities for generating convincing email content. AI-generated messages can be grammatically correct, professionally structured, and adapted to specific communication contexts.
 
-Human judgment therefore remains an important part of cybersecurity. Understanding how accurately people identify suspicious emails can help improve cybersecurity awareness and training.
+Traditional phishing awareness often emphasizes warning signs such as spelling mistakes, suspicious links, unusual sender addresses, and urgent requests. However, the increasing fluency of AI-generated messages makes it important to examine how people evaluate email authenticity.
 
-The main objective of this research is to examine existing findings on human phishing detection and conduct a small pilot survey assessing the ability of participants to identify AI-generated phishing emails.
+### B. Research Problem
 
-The study addresses the following research questions:
+Although phishing awareness has received considerable attention, users continue to face difficulties identifying deceptive messages. AI-generated phishing introduces additional challenges because messages may appear more natural and professionally written.
 
-- **RQ1:** What does existing research indicate about human ability to detect phishing emails and AI-enabled phishing threats?
-- **RQ2:** How accurately can participants identify AI-generated phishing emails and distinguish them from legitimate emails?
-- **RQ3:** Is self-reported cybersecurity knowledge associated with participants' ability to detect AI-generated phishing emails?
+The central research question is:
 
-## 2. Related Work
+**How do people identify phishing emails in a selection of AI-generated phishing and legitimate email examples?**
 
-Previous research has examined phishing attacks from both technological and human-centered perspectives. Existing studies show that phishing detection depends not only on the characteristics of an email but also on users' knowledge, attention, and decision-making processes.
+### C. Research Objectives
 
-Heiding et al. (2024) investigated how large language models can be used to generate phishing emails. Their research compared AI-generated phishing messages with manually designed phishing emails and examined how users responded to them. The findings demonstrated the potential of generative AI to produce effective phishing messages.
+The objectives of this study are:
 
-Eze and Shamir (2024) examined AI-based phishing email attacks and discussed methods for their detection and prevention. Their research highlights the importance of developing approaches that address phishing messages generated using modern AI technologies.
+1. To examine existing research on human phishing detection.
+2. To investigate how students classify phishing and legitimate email examples.
+3. To analyze response patterns across 12 email examples.
+4. To examine the role of cybersecurity awareness in email evaluation.
+5. To identify challenges associated with AI-generated phishing communication.
 
-Human factors have also been widely investigated. Sturman et al. (2024) studied the role of phishing knowledge, cue utilization, and decision-making styles in email detection. Their findings suggest that the ability to recognize relevant indicators in an email is important for distinguishing phishing messages from legitimate communication.
+## II. LITERATURE REVIEW
 
-Butavicius et al. (2022) conducted an online experiment involving 472 participants. Their results showed that time pressure reduced phishing detection accuracy. The study also found that commonly assumed indicators, such as poor grammar and lack of personalization, did not necessarily improve participants' ability to distinguish phishing emails.
+### A. Human Phishing Detection
 
-Canfield et al. (2016) examined phishing susceptibility using signal detection theory. Their research demonstrated that phishing detection and decisions about how to respond to an email are related but distinct tasks.
+Human phishing detection depends on the ability to recognize suspicious characteristics and evaluate the context of an email.
 
-More recent research by Madleňák and Hubočan (2026) investigated human ability to detect AI-generated content using a survey that included emails, SMS messages, portraits, and fictitious company logos. Their findings indicate that detection performance can differ depending on the type of content being evaluated.
+Steves, Greene, and Theofanos introduced the Phish Scale, which considers message characteristics and contextual relevance when assessing phishing difficulty.
 
-Overall, previous studies demonstrate that phishing detection is influenced by multiple factors, including message characteristics, user knowledge, attention, and decision-making. However, continued research is needed to understand how people recognize AI-generated phishing emails.
+Research indicates that users may overlook suspicious characteristics when messages appear relevant, familiar, or professionally written.
 
-## 3. Methodology
+### B. The Role of Context and Decision-Making
 
-### 3.1 Research Design
+Sturman et al. examined the relationship between phishing knowledge, cue utilization, and decision-making styles. Their research highlights the importance of recognizing and interpreting relevant indicators when distinguishing phishing from legitimate messages.
 
-This study combines a review of existing academic literature with a pilot survey. The literature review examines previous research on human phishing detection and AI-generated phishing threats. The survey provides preliminary empirical observations about participants' ability to identify AI-generated phishing emails.
+This demonstrates that cybersecurity knowledge alone is not necessarily sufficient. Users must also apply that knowledge when evaluating individual messages.
 
-### 3.2 Survey Design and Participants
+### C. Artificial Intelligence and Phishing
 
-An anonymous online questionnaire was used to collect participants' responses.
+Generative AI has made it possible to create convincing phishing messages with fewer obvious grammatical and structural errors.
 
-The questionnaire consisted of 12 email examples:
-- Six AI-generated phishing emails.
-- Six legitimate emails.
+Heiding et al. investigated the use of large language models in generating and detecting phishing emails. Their research demonstrates the relevance of generative AI to modern phishing threats.
 
-Participants were asked to classify each email as either phishing or legitimate.
+These developments highlight the importance of studying human detection capabilities in environments where malicious messages may appear increasingly authentic.
 
-The questionnaire also collected information about participants' self-reported cybersecurity knowledge and previous experience with phishing messages.
+### D. Research Relevance
 
-A total of [N] participants completed the survey.
+Existing research provides an important foundation for understanding phishing detection, human decision-making, and AI-generated malicious communication.
 
-### 3.3 Data Processing
+This project contributes a student-survey perspective by examining how participants classify a collection of email examples.
 
-The survey responses were exported from Google Forms in CSV format. A Python script was developed to convert the responses into JSONL format for further analysis.
+## III. METHODOLOGY
 
-Each response record contains:
-- Participant identifier.
-- Email identifier.
-- True email category.
-- Participant's predicted category.
-- Correctness of the response.
-- Self-reported cybersecurity knowledge.
-- Previous phishing experience.
+### A. Research Design
 
-Participant identifiers were generated using pseudonymous labels. No personal identifying information is presented in the analysis.
+The project combines a literature-based review with a descriptive survey analysis.
 
-### 3.4 Evaluation Metrics
+Participants were presented with email examples and asked to classify each message using two response categories:
 
-Two main metrics were used to evaluate detection performance.
+- Phishing
+- Legitimate
 
-**Detection Recall**
+The survey also included demographic and cybersecurity-related questions.
 
-Detection recall measures the proportion of AI-generated phishing emails correctly identified as phishing.
+### B. Participants and Dataset
 
-\[
-Recall_{AI} = \frac{TP}{TP + FN}
-\]
+The available survey export contains:
 
-Where:
-- TP represents AI-generated phishing emails correctly identified as phishing.
-- FN represents AI-generated phishing emails incorrectly classified as legitimate.
+- 27 participant records.
+- 12 email-classification questions.
+- 324 recorded classifications.
 
-**False Positive Rate (FPR)**
+The analysis uses anonymized response data and summarizes participant choices across the email examples.
 
-The false positive rate measures the proportion of legitimate emails incorrectly classified as phishing.
+### C. Data Processing
 
-\[
-FPR = \frac{FP}{FP + TN}
-\]
-
-Where:
-- FP represents legitimate emails incorrectly classified as phishing.
-- TN represents legitimate emails correctly classified as legitimate.
-
-Metrics were first calculated at the participant level and then averaged across participants.
-
-### 3.5 Statistical Analysis
-
-Participant-level bootstrap confidence intervals were calculated using 5,000 resampling iterations. A fixed random seed was used to support reproducibility.
+Python and Pandas were used for data inspection, processing, and statistical summaries.
 
 The analysis included:
-1. Mean detection recall for AI-generated phishing emails.
-2. Mean false positive rate for legitimate emails.
-3. Visualization of participant detection performance according to self-reported cybersecurity knowledge.
 
-The relationship between cybersecurity knowledge and detection performance was explored descriptively.
+- Dataset structure inspection.
+- Column identification.
+- Missing-value assessment.
+- Duplicate-record inspection.
+- Response-frequency calculation.
+- Summary-table generation.
+- Data visualization.
 
-The survey did not include human-written phishing emails. Therefore, it does not support a direct empirical comparison between AI-generated and human-written phishing emails.
+### D. Evaluation Measures
 
-## 4. Results
+The descriptive analysis reports the number and percentage of participants selecting each response category.
 
-### 4.1 Participant Overview
+Formal classification metrics, including Accuracy, Precision, Recall, Specificity, and F1-score, require verified ground-truth labels for every email stimulus.
 
-A total of [N] participants were included in the analysis. Each participant evaluated six AI-generated phishing emails and six legitimate emails.
+These metrics are not reported in the current analysis because the available response export does not contain a verified answer key.
 
-### 4.2 AI-Generated Phishing Detection
+The confidence question was also excluded from group-level statistical analysis because most participant records did not contain a confidence response.
 
-The average detection recall for AI-generated phishing emails was [X%], with a 95% bootstrap confidence interval of [lower bound, upper bound].
+## IV. RESULTS
 
-This metric represents the proportion of AI-generated phishing emails that participants correctly identified as phishing.
+### A. Overall Classification Results
 
-![Figure 1. Detection Recall for AI-Generated Phishing Emails](../reports/figures/fig1_ai_detection.png)
+A total of 324 email classifications were recorded.
 
+| Response category | Responses | Percentage |
+|---|---:|---:|
+| Phishing | 181 | 55.9% |
+| Legitimate | 143 | 44.1% |
+| Total | 324 | 100% |
 
-**Figure 1.** Detection Recall for AI-Generated Phishing Emails.
+The results indicate that participants selected the phishing option more frequently than the legitimate option.
 
-### 4.3 False Positive Rate
+These figures represent response choices rather than objectively verified correct classifications.
 
-The average false positive rate for legitimate emails was [Y%], with a 95% bootstrap confidence interval of [lower bound, upper bound].
+### B. Results by Email Example
 
-This result represents the proportion of legitimate emails incorrectly identified as phishing.
+| Email | Phishing | Legitimate |
+|---|---:|---:|
+| Email 01 | 24 (88.9%) | 3 (11.1%) |
+| Email 02 | 5 (18.5%) | 22 (81.5%) |
+| Email 03 | 23 (85.2%) | 4 (14.8%) |
+| Email 04 | 7 (25.9%) | 20 (74.1%) |
+| Email 05 | 24 (88.9%) | 3 (11.1%) |
+| Email 06 | 6 (22.2%) | 21 (77.8%) |
+| Email 07 | 25 (92.6%) | 2 (7.4%) |
+| Email 08 | 6 (22.2%) | 21 (77.8%) |
+| Email 09 | 21 (77.8%) | 6 (22.2%) |
+| Email 10 | 10 (37.0%) | 17 (63.0%) |
+| Email 11 | 21 (77.8%) | 6 (22.2%) |
+| Email 12 | 9 (33.3%) | 18 (66.7%) |
 
-![Figure 2. False Positive Rate for Legitimate Emails](../reports/figures/fig2_false_positive_rate.png)
+### C. Main Observations
 
-**Figure 2.** False Positive Rate for Legitimate Emails.
+Email 07 received the highest number of phishing classifications, with 25 out of 27 participants selecting this response.
 
-### 4.4 Cybersecurity Knowledge and Detection Performance
+Email 02 received the highest number of legitimate classifications, with 22 out of 27 participants selecting this response.
 
-Participant-level detection recall was also examined according to self-reported cybersecurity knowledge.
+These differences demonstrate that participants responded differently to the individual email examples.
 
-**Figure 3.** AI Phishing Detection by Self-Reported Cybersecurity Knowledge.
+However, without verified message labels, these patterns cannot establish which examples were correctly or incorrectly classified.
 
-The visualization provides an exploratory view of differences in detection performance across cybersecurity knowledge groups. These differences should be interpreted cautiously and do not establish a causal relationship.
+## V. DISCUSSION
 
-![Figure 3. AI Phishing Detection by Cybersecurity Knowledge](../reports/figures/fig3_cyber_knowledge.png)
+The survey provides descriptive insight into how students evaluate different email examples.
 
+The overall response distribution shows that participants selected phishing more frequently than legitimate. The differences between individual email examples also demonstrate variation in participant judgement.
 
-## 5. Discussion
+These observations are relevant to existing research on human phishing detection.
 
-The pilot survey provides preliminary evidence about how participants identify AI-generated phishing emails and legitimate messages.
+The Phish Scale emphasizes the importance of contextual relevance and message characteristics. Research by Sturman et al. similarly highlights the importance of recognizing and interpreting phishing indicators.
 
-Detection recall indicates how successfully participants recognized AI-generated phishing attempts. The false positive rate provides additional information about whether participants incorrectly classified legitimate emails as suspicious.
+The development of generative AI makes this topic particularly relevant because professional language and natural sentence structure can make suspicious messages appear more authentic.
 
-Both metrics are important when evaluating human phishing detection. A high detection recall accompanied by a high false positive rate may indicate that participants tend to classify many emails as phishing, including legitimate ones.
+The findings should nevertheless be interpreted within the limitations of the available dataset. Response frequencies cannot establish detection accuracy without verified labels.
 
-The results should also be considered in relation to previous research. Earlier studies have shown that phishing detection depends on users' ability to recognize relevant email cues, their cybersecurity knowledge, and the conditions under which they evaluate messages.
+## VI. LIMITATIONS
 
-The exploratory visualization of cybersecurity knowledge may help identify potential differences between participants with different self-assessed knowledge levels. However, further research with a larger sample and additional statistical testing is required to establish whether these differences are meaningful.
+Several limitations should be considered when interpreting the results.
 
-Importantly, the present survey focuses on AI-generated phishing emails and legitimate emails. It does not establish whether AI-generated phishing emails are more difficult to detect than human-written phishing emails.
+First, the survey included 27 participants, and the findings should not be generalized to the entire population.
 
-## 6. Limitations
+Second, each participant classified multiple email examples, meaning that the observations are repeated classifications rather than independent participants.
 
-Several limitations should be considered when interpreting the findings.
+Third, the available response export does not contain verified ground-truth labels or source-provenance information for all 12 email examples.
 
-First, the survey included only 12 email examples. A larger and more diverse set of emails would provide a broader evaluation of phishing detection ability.
+Fourth, confidence responses were incomplete, preventing meaningful group-level confidence analysis.
 
-Second, the survey included six AI-generated phishing emails and six legitimate emails but did not include human-written phishing emails. Consequently, a direct comparison between AI-generated and human-written phishing messages was not possible.
+Finally, the available dataset does not document an automated-system comparison or a verifiable warm-up exclusion procedure.
 
-Third, the sample size may limit the generalizability of the findings. The results should therefore be interpreted as preliminary observations rather than representative estimates of the wider population.
+Future research should include a verified answer key, documented email-generation procedures, and a larger participant sample.
 
-Fourth, cybersecurity knowledge was self-reported by participants. Self-assessments may not accurately reflect their actual cybersecurity skills.
+## VII. CONCLUSION
 
-Finally, participants classified emails using a binary phishing-or-legitimate response. The study did not measure response time or confidence in individual decisions.
+This study examined human responses to phishing and legitimate email examples through a student survey and a review of existing cybersecurity research.
 
-Future research should include a larger sample, a wider variety of email examples, and both AI-generated and human-written phishing messages.
+The survey included 27 participants and 12 email examples, producing 324 recorded classifications. Participants selected phishing in 55.9% of cases and legitimate in 44.1% of cases.
 
-## 7. Conclusion
+The results demonstrate variation in how participants evaluate different email examples and provide a descriptive foundation for understanding human responses to potentially deceptive email communication.
 
-This study examined human ability to identify AI-generated phishing emails through a review of existing research and an anonymous pilot survey.
+Combined with existing research, the project highlights the importance of cybersecurity awareness, contextual evaluation, and careful inspection of email characteristics in an environment increasingly influenced by generative AI.
 
-The survey included six AI-generated phishing emails and six legitimate emails. Detection recall and false positive rate were used to evaluate participant performance. Self-reported cybersecurity knowledge was also explored as a possible factor associated with detection ability.
+Further research using verified email labels, documented source conditions, and a larger sample would allow more detailed evaluation of human detection performance.
 
-The findings provide preliminary insights into how participants distinguish AI-generated phishing messages from legitimate communication. However, the limited number of email examples and the absence of human-written phishing messages restrict the conclusions that can be drawn.
+## ACKNOWLEDGMENT
 
-Further studies should use larger participant samples and compare AI-generated phishing emails directly with human-written phishing emails. Such research could contribute to a better understanding of human vulnerability to emerging AI-enabled cyber threats.
+The authors would like to thank all participants who contributed to the survey and supported this research project.
 
-## 8. References
+## REFERENCES
 
-1. Heiding, F., Schneier, B., Vishwanath, A., Bernstein, J., & Park, P. S. (2024). Devising and Detecting Phishing Emails Using Large Language Models. *IEEE Access*. https://doi.org/10.1109/ACCESS.2024.3375882
+[1] F. Heiding, B. Schneier, A. Vishwanath, J. Bernstein, and P. S. Park, “Devising and Detecting Phishing Emails Using Large Language Models,” IEEE Access, 2024. doi: 10.1109/ACCESS.2024.3375882.
 
-2. Eze, C. S., & Shamir, L. (2024). Analysis and Prevention of AI-Based Phishing Email Attacks. *Electronics, 13*(10), 1839. https://doi.org/10.3390/electronics13101839
+[2] M. Steves, K. Greene, and M. Theofanos, “Categorizing Human Phishing Difficulty: A Phish Scale,” Journal of Cybersecurity, vol. 6, no. 1, 2020. doi: 10.1093/cybsec/tyaa009.
 
-3. Sturman, D., Bell, E. A., Auton, J. C., Breakey, G. R., & Wiggins, M. W. (2024). The roles of phishing knowledge, cue utilization, and decision styles in phishing email detection. *Applied Ergonomics, 119*, 104309. https://doi.org/10.1016/j.apergo.2024.104309
+[3] D. Sturman et al., “The Roles of Phishing Knowledge, Cue Utilization, and Decision Styles in Phishing Email Detection,” Applied Ergonomics, vol. 119, 2024. doi: 10.1016/j.apergo.2024.104309.
 
-4. Butavicius, M., Taib, R., & Han, S. J. (2022). Why people keep falling for phishing scams: The effects of time pressure and deception cues on the detection of phishing emails. *Computers & Security, 123*, 102937. https://doi.org/10.1016/j.cose.2022.102937
+[4] M. Butavicius, R. Taib, and S. J. Han, “Why People Keep Falling for Phishing Scams: The Effects of Time Pressure and Deception Cues on the Detection of Phishing Emails,” Computers & Security, vol. 123, 2022. doi: 10.1016/j.cose.2022.102937.
 
-5. Canfield, C. I., Fischhoff, B., & Davis, A. (2016). Quantifying Phishing Susceptibility for Detection and Behavior Decisions. *Human Factors, 58*(8), 1158–1172. https://doi.org/10.1177/0018720816665025
+## PROJECT REPOSITORY
 
-6. Madleňák, M., & Hubočan, S. (2026). Phishing 2.0: Human Ability to Detect AI-Generated Content. *Transportation Research Procedia, 93*, 1125–1132. https://doi.org/10.1016/j.trpro.2025.12.051
+GitHub: https://github.com/zhadritto/ai-phishing-literature-review
+
+**Authors:** Zhadyra Kurmanova and Meirim Yersultan.
