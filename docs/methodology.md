@@ -1,135 +1,276 @@
+
 # Research Methodology
 
-## 1. Project information
+## 1. Project Information
 
-**Project:** Student Responses to Phishing and Legitimate Email Examples in the Context of AI-Generated Phishing  
-**Authors:** Zhadyra Kurmanova and Meirim Yersultan  
-**Repository:** https://github.com/zhadritto/ai-phishing-literature-review  
-**Study component:** Descriptive analysis of a student email-classification survey.
+**Research title:** Human Ability to Detect AI-Generated Phishing Emails: A Review of Existing Research
 
-This document describes the survey analysis reported in `paper_draft.md`. The repository also contains a separate synthetic benchmark used to demonstrate a Python measurement pipeline. Synthetic benchmark outputs are not survey findings and must not be combined with the survey results.
+**Authors:** Zhadyra Kurmanova and Meirim Yersultan
 
-## 2. Research question and scope
+**Institution:** Narxoz University
 
-**RQ1:** What response patterns are observed when participants classify the 12 email examples as phishing or legitimate?
+**Research approach:** Literature review and quantitative student survey.
 
-The current survey supports descriptive summaries of the selected response categories. It does not support a verified comparison of AI-generated phishing with human-written phishing because the public project archive does not contain a complete, independently verifiable source mapping for every email example.
+## 2. Research Design
 
-The study does not test the performance of an automated phishing detector. It does not estimate objective detection accuracy unless a verified answer key and the original participant-level response file are available and validated.
+The project combines a review of existing academic research with a quantitative survey of university students.
 
-## 3. Research design
+The empirical component examines how participants classify email examples as either phishing or legitimate.
 
-The survey uses a quantitative, descriptive design. Participants classify email examples into two response categories:
+The study includes three categories of email stimuli:
 
-- `phishing`
-- `legitimate`
+- AI-generated phishing emails.
+- Human-written phishing emails.
+- Legitimate emails.
 
-The supplied survey export contains 27 participant records and 12 email-classification questions, producing 324 possible classifications. The unit of analysis for the published response-frequency tables is the classification, aggregated by email example.
+The survey also collects demographic information, self-reported cybersecurity knowledge, previous phishing experience, the first indicator checked by participants, and self-reported confidence.
 
-The exact recruitment method, eligibility criteria, survey presentation order, randomization procedure, and participant instructions should be described from the original survey protocol. Do not infer or invent these details.
+The study focuses on human email classification. It does not evaluate an automated phishing-detection model.
 
-## 4. Dataset and variables
+## 3. Research Questions
 
-### 4.1 Available survey data
+The research is guided by four questions:
 
-The local original survey export is processed into a long-format dataset with one record per participant and email example. The public aggregate file `data/processed/email_classification_summary.csv` contains one row per email example and response counts.
+- RQ1: How accurately can university students identify AI-generated phishing emails?
+- RQ2: Is there a difference in participants' ability to detect AI-generated and human-written phishing emails?
+- RQ3: How are self-reported cybersecurity knowledge and previous phishing experience related to phishing detection performance?
+- RQ4: Which indicators do participants primarily rely on when identifying phishing emails?
 
-The observed aggregate results in the supplied export are:
+Detailed questions and hypotheses are documented in `research_questions.md`.
 
-- Participants: 27.
-- Email examples: 12.
-- Total classifications: 324.
-- Phishing selections: 181 (55.9%).
-- Legitimate selections: 143 (44.1%).
-- Missing or unrecognized email classifications: 0 in the supplied export.
+## 4. Participants and Sampling
 
-These are response frequencies, not measures of accuracy.
+The latest response table supplied for analysis contains 30 participant records.
 
-### 4.2 Variables
+Each participant was asked to classify 12 email examples.
 
-| Variable | Role | Definition |
+The final participant count and the completeness of all responses must be confirmed against the original Google Forms export before publication.
+
+The survey includes the following demographic and background variables:
+
+- Age group.
+- Self-reported cybersecurity knowledge.
+- Previous phishing experience.
+
+The recruitment procedure and sampling method must be described using the actual study records. No recruitment method is assumed in this document.
+
+## 5. Survey Instrument
+
+The questionnaire contains the following questions:
+
+| Question | Variable | Description |
 |---|---|---|
-| `participant_id` | Identifier | Pseudonymous identifier generated during local processing |
-| `email_id` | Grouping variable | Identifier of an email example |
-| `predicted_label` | Observed response | Participant selection: `phishing` or `legitimate` |
-| `true_label` | Ground truth | Independently verified correct class of an email |
-| `email_source` | Stimulus provenance | Documented origin or generation method of an email |
-| `age_group` | Descriptive variable | Participant's age category as collected in the survey |
-| `cyber_knowledge` | Descriptive variable | Self-reported cybersecurity knowledge |
-| `phishing_experience` | Descriptive variable | Self-reported previous phishing experience |
-| `first_indicator` | Descriptive variable | First indicator noticed by the participant |
-| `confidence` | Secondary measure | Self-reported confidence, if collected and complete |
+| Q1 | Age group | Participant age category |
+| Q2 | Cybersecurity knowledge | Self-reported knowledge level |
+| Q3 | Phishing experience | Previous experience with phishing |
+| Q4-Q15 | Email classification | Classification of 12 email examples |
+| Q16 | First detection indicator | First characteristic checked by the participant |
+| Additional question | Confidence | Self-reported confidence in answers |
 
-Confidence responses are incomplete in the supplied export and must not be treated as a complete group-level measure.
+For each email, participants selected one of two options:
 
-## 5. Data collection and privacy
+- Phishing email.
+- Legitimate email.
 
-The survey export supplied for this analysis contains 27 records dated November 5, 2026. The actual recruitment method, eligibility criteria, presentation order, and consent procedure must be documented from the original survey materials; this methodology does not invent them.
+The questionnaire also included a confidence question. However, the latest supplied response table contains only one completed confidence value. Therefore, confidence is not used for group-level statistical conclusions.
 
-Raw survey exports must be stored in restricted local storage and must not be committed to the public repository. Before publication, direct identifiers and indirect identifiers that could reveal a participant must be removed or appropriately protected. Only reviewed aggregate outputs should be published.
+## 6. Email Stimuli and Ground Truth
 
-Because the supplied responses include participants under 18, the authors must verify institutional requirements for research involving minors, including the required participant assent and parent/guardian permission where applicable. Do not claim approval or consent unless supported by the actual records.
+The survey contains 12 email examples.
 
-## 6. Data processing
+| Email ID | Correct class | Authorship |
+|---|---|---|
+| email_01 | Phishing | AI-generated |
+| email_02 | Legitimate | Unknown |
+| email_03 | Phishing | Human-written |
+| email_04 | Legitimate | Unknown |
+| email_05 | Phishing | AI-generated |
+| email_06 | Legitimate | Unknown |
+| email_07 | Phishing | Human-written |
+| email_08 | Legitimate | Unknown |
+| email_09 | Phishing | AI-generated |
+| email_10 | Legitimate | Unknown |
+| email_11 | Phishing | Human-written |
+| email_12 | Legitimate | Unknown |
 
-Python and Pandas are used to inspect and summarize survey responses.
+The phishing examples are divided into two authorship groups:
 
-The processing sequence is:
+- Three AI-generated phishing examples.
+- Three human-written phishing examples.
 
-1. Load the original survey export from restricted local storage.
-2. Inspect column names, data types, missing values, and duplicate records.
-3. Map the 12 email-question columns explicitly and verify the mapping against the questionnaire.
-4. Normalize participant selections to `phishing` and `legitimate`; ambiguous answers remain unclassified.
-5. Reshape the responses into one record per participant and email example.
-6. Generate aggregate response counts and percentages.
-7. Save participant-level intermediate files locally and publish only approved aggregate outputs.
+The authorship of the legitimate examples has not been established and is therefore recorded as unknown.
 
-The raw CSV is not modified by the processing script.
+The ground-truth labels and authorship categories are maintained separately in `data/metadata/email_answer_key.csv`.
 
-## 7. Analysis plan
+The labels must be checked against the original questionnaire and stimulus records before final publication.
 
-### 7.1 Descriptive measures
+## 7. Data Collection Procedure
 
-For each email example:
+The questionnaire was distributed using Google Forms.
 
-\[
-\text{Phishing selection percentage} = \frac{n_{phishing}}{n_{phishing}+n_{legitimate}} \times 100.
-\]
+The supplied response table contains records dated November 5, 2026.
 
-The overall response distribution is calculated by summing selections across all 12 examples:
+Participants provided demographic information and classified the 12 email examples.
 
-\[
-\text{Overall category percentage} = \frac{N_{category}}{N_{valid\ classifications}} \times 100.
-\]
+The original Google Forms export is maintained separately from the public repository.
 
-These values describe participants' choices only.
+The exact recruitment, consent, questionnaire presentation order, and randomization procedures must be documented only when confirmed by the researchers' records.
 
-### 7.2 Classification performance measures
+## 8. Data Storage and Privacy
 
-Accuracy, precision, recall, specificity, F1-score, and a confusion matrix require participant predictions and a verified answer key for all email examples. A complete key must include a correct class and documented source for each email, and the labels must be checked against the original stimuli.
+The original participant-level survey export is stored locally.
 
-The processing script keeps accuracy disabled by default. Enable it only after independent verification of all 12 email labels and sources and after reproducing the results from the original response export. Never use an old summary CSV or a chart as a substitute for source data and a verified answer key.
+The public repository does not contain:
 
-### 7.3 Confidence and response time
+- Original participant email addresses.
+- Raw identifiable survey exports.
+- Consent records.
+- Other direct personal identifiers.
 
-Confidence and response-time analyses are not included unless the original data contain complete, valid measurements and the survey protocol confirms how these variables were collected.
+Participant records are assigned pseudonymous identifiers during local processing.
 
-## 8. Repeated observations
+Only reviewed aggregate outputs are considered for publication.
 
-Each participant evaluates multiple email examples. Therefore, individual email classifications from one participant are repeated observations and should not be treated as 324 independent participants in inferential statistical tests. The current report uses descriptive frequencies only.
+The repository uses `.gitignore` rules to prevent accidental tracking of raw survey data.
 
-## 9. Validity and limitations
+## 9. Data Processing
 
-The study includes 27 participant records and 12 email examples. The findings should not be generalized to a wider population without further sampling. The public aggregate file does not permit an independent participant-level reanalysis. The source and correct label of every email example must be documented before objective detection performance or AI-authorship claims can be made. Confidence responses are incomplete. These limitations must remain visible in the paper.
+Python and Pandas are used for data inspection, processing, and analysis.
 
-## 10. Ethics
+The processing workflow consists of the following stages:
 
-The authors must verify the institution's requirements and document the actual consent process. Because the supplied survey export includes participants under 18, the authors must confirm the applicable assent and parent/guardian permission requirements with the institution before external publication. This document does not claim an ethics approval identifier that is not documented in project records.
+1. Load the original Google Forms CSV export.
+2. Validate the number of columns and participant records.
+3. Identify the 12 repeated email-question columns by their verified positions.
+4. Normalize Russian response options into standard labels.
+5. Reshape the survey from wide format to long format.
+6. Assign pseudonymous participant identifiers.
+7. Join the verified email answer key.
+8. Add the email authorship category.
+9. Calculate whether each participant classification matches the correct email label.
+10. Report missing and unrecognized responses.
+11. Generate aggregate statistical tables.
+12. Produce scientific visualizations.
 
-## 11. Separate synthetic benchmark
+The original CSV is not modified during processing.
 
-The files `src/benchmark.py`, `config.json`, and `data/sample/responses.csv` form a separate synthetic demonstration pipeline. The sample is constructed test data used to demonstrate metric calculation for hypothetical email categories. It is not part of the 27-participant survey and must never be used to populate the survey paper's Results section.
+The Google Forms points column is not used as a measure of detection accuracy.
 
-## 12. Reproducibility
+## 10. Evaluation Metrics
 
-The public repository supports the synthetic benchmark and regeneration of descriptive response-frequency charts from the committed aggregate CSV. Processing the original participant-level survey requires the private local CSV. The raw file and any identifying fields must not be uploaded to public CI.
+The positive classification is defined as `phishing`.
+
+The negative classification is defined as `legitimate`.
+
+The following metrics are calculated:
+
+### 10.1. Accuracy
+
+The proportion of all valid classifications that match the verified email labels.
+
+### 10.2. Precision
+
+The proportion of predicted phishing classifications that are actually phishing.
+
+### 10.3. Recall
+
+The proportion of actual phishing emails correctly identified as phishing.
+
+### 10.4. Specificity
+
+The proportion of legitimate emails correctly identified as legitimate.
+
+### 10.5. False Positive Rate
+
+The proportion of legitimate emails incorrectly classified as phishing.
+
+### 10.6. F1-score
+
+The harmonic mean of precision and recall.
+
+### 10.7. Source-specific Recall
+
+Detection recall is calculated separately for:
+
+- AI-generated phishing.
+- Human-written phishing.
+
+All metrics are calculated from participant predictions and verified ground-truth labels.
+
+Results are reported with the corresponding number of valid classifications and denominators.
+
+## 11. Statistical Analysis
+
+Each participant evaluates multiple email examples.
+
+Therefore, individual classifications from the same participant are treated as repeated observations rather than independent participants.
+
+For the comparison between AI-generated and human-written phishing:
+
+1. Calculate one detection-recall value per participant for each authorship group.
+2. Compare the two participant-level results using a paired approach.
+3. Report group estimates and uncertainty intervals.
+4. Interpret statistical significance and effect size cautiously.
+
+Bootstrap confidence intervals use participant-level resampling.
+
+A fixed random seed is used to improve reproducibility.
+
+The small number of email stimuli in each phishing group limits the generalizability of the comparison.
+
+## 12. Missing Data
+
+Missing classifications are not automatically treated as correct or incorrect.
+
+The number of missing responses is reported separately.
+
+Confidence responses are incomplete in the latest supplied response table. Therefore, confidence is excluded from inferential group comparisons.
+
+Response time was not collected as part of the survey and is not included in survey performance metrics.
+
+## 13. Ethical Considerations
+
+The questionnaire includes an age category for participants under 18.
+
+The researchers must verify the university's requirements for participation by minors, including any required assent and parent or guardian permission.
+
+The study must not claim ethics approval or consent procedures unless they are supported by the relevant institutional records.
+
+Participant data must be handled confidentially and in accordance with the university's research requirements.
+
+## 14. Limitations
+
+The study has several limitations:
+
+1. The participant sample is limited and should not be treated as representative of all users.
+2. Only three AI-generated phishing examples are included.
+3. Only three human-written phishing examples are included.
+4. The findings concern the selected email examples and cannot establish universal differences between AI-generated and human-written phishing.
+5. The authorship of the legitimate email examples is unknown.
+6. Cybersecurity knowledge is self-reported rather than objectively tested.
+7. Confidence responses are incomplete.
+8. Response time was not collected.
+9. The survey's recruitment and presentation procedures require documentation from the original study records.
+
+These limitations are considered when interpreting the findings.
+
+## 15. Separate Technical Benchmark
+
+The repository may include a separate technical benchmark of the Python data-processing pipeline.
+
+This benchmark measures software execution performance, such as processing latency, percentiles, confidence intervals, and error rates.
+
+Technical benchmark measurements are not survey results and are not combined with human phishing-detection metrics.
+
+## 16. Reproducibility
+
+The repository contains the processing scripts, analysis notebook, answer-key metadata, documentation, and approved aggregate outputs.
+
+The original participant-level export remains private.
+
+The analysis can be reproduced by placing the authorized survey export in the local `data/raw/` directory and executing the documented processing workflow.
+
+## 17. Authors
+
+Zhadyra Kurmanova  
+Meirim Yersultan
