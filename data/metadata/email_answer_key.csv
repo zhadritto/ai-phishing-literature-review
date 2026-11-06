@@ -1,0 +1,14 @@
+
+email_id,true_label,email_source
+email_01,phishing,ai_generated
+email_02,legitimate,unknown
+email_03,phishing,human_written
+email_04,legitimate,unknown
+email_05,phishing,ai_generated
+email_06,legitimate,unknown
+email_07,phishing,human_written
+email_08,legitimate,unknown
+email_09,phishing,ai_generated
+email_10,legitimate,unknown
+email_11,phishing,human_written
+email_12,legitimate,unknown
