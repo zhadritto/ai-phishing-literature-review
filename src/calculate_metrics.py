@@ -5,34 +5,49 @@ import numpy as np
 import pandas as pd
 
 
+# ==========================================================
+# PROJECT CONFIGURATION
+# ==========================================================
+
 ROOT = Path(__file__).resolve().parents[1]
 
-INPUT_FILE = ROOT / "data" / "processed" / "student_responses_long.csv"
-OUTPUT_DIR = ROOT / "data" / "processed"
+INPUT_FILE = (
+    ROOT / "data" / "processed" / "student_responses_long.csv"
+)
 
-RANDOM_SEED = 42
-BOOTSTRAP_ITERATIONS = 5000
+OUTPUT_DIR = ROOT / "data" / "processed"
 
 POSITIVE_LABEL = "phishing"
 NEGATIVE_LABEL = "legitimate"
 
 PHISHING_SOURCES = [
     "ai_generated",
-    "human_written"
+    "human_written",
 ]
 
+BOOTSTRAP_ITERATIONS = 5000
+RANDOM_SEED = 42
+CONFIDENCE_LEVEL = 0.95
+
+
+# ==========================================================
+# DATA VALIDATION
+# ==========================================================
 
 def validate_classification_data(data):
     """
-    Validate and normalize participant predictions
-    and verified email labels.
+    Validate participant predictions and email ground truth.
+
+    Missing predictions are retained in the dataset
+    but excluded from classification metrics.
     """
 
     required = {
         "participant_id",
         "email_id",
         "true_label",
-        "predicted_label"
+        "predicted_label",
+        "email_source",
     }
 
     missing = required - set(data.columns)
@@ -44,7 +59,13 @@ def validate_classification_data(data):
 
     df = data.copy()
 
-    for column in ["true_label", "predicted_label"]:
+    for column in [
+        "participant_id",
+        "email_id",
+        "true_label",
+        "predicted_label",
+        "email_source",
+    ]:
         df[column] = (
             df[column]
             .astype("string")
@@ -52,59 +73,105 @@ def validate_classification_data(data):
             .str.lower()
         )
 
-    # Exclude unanswered or unverified classifications.
-    valid = df.dropna(
-        subset=["true_label", "predicted_label"]
-    ).copy()
+    if df["participant_id"].isna().any():
+        raise ValueError("Missing participant identifiers.")
 
-    valid = valid[
-        valid["true_label"].isin(
+    if df["true_label"].isna().any():
+        raise ValueError("Missing ground-truth labels.")
+
+    if df["email_source"].isna().any():
+        raise ValueError("Missing email source metadata.")
+
+    invalid_truth = (
+        ~df["true_label"].isin(
             [POSITIVE_LABEL, NEGATIVE_LABEL]
         )
-        & valid["predicted_label"].isin(
+    )
+
+    if invalid_truth.any():
+        raise ValueError("Invalid ground-truth labels detected.")
+
+    invalid_source = (
+        ~df["email_source"].isin(
+            PHISHING_SOURCES + ["unknown"]
+        )
+    )
+
+    if invalid_source.any():
+        raise ValueError("Invalid email source categories.")
+
+    invalid_predictions = (
+        df["predicted_label"].notna()
+        & ~df["predicted_label"].isin(
             [POSITIVE_LABEL, NEGATIVE_LABEL]
         )
-    ].copy()
+    )
 
-    if valid.empty:
+    if invalid_predictions.any():
+        raise ValueError("Invalid participant predictions detected.")
+
+    if df.duplicated(
+        ["participant_id", "email_id"]
+    ).any():
         raise ValueError(
-            "No valid classifications available."
+            "Duplicate participant-email observations detected."
         )
 
-    return valid
+    # Recalculate correctness instead of trusting a stored column.
+    df["is_correct"] = (
+        df["predicted_label"] == df["true_label"]
+    ).astype("boolean")
 
+    return df
+
+
+# ==========================================================
+# CONFUSION MATRIX
+# ==========================================================
 
 def calculate_confusion_matrix(data):
     """
     Calculate TP, TN, FP and FN.
 
-    Positive class: phishing
-    Negative class: legitimate
+    Positive class: phishing.
+    Negative class: legitimate.
     """
 
     df = validate_classification_data(data)
 
-    actual = df["true_label"]
-    predicted = df["predicted_label"]
+    valid = df.dropna(
+        subset=["predicted_label"]
+    )
+
+    actual = valid["true_label"]
+    predicted = valid["predicted_label"]
 
     tp = int(
-        ((actual == POSITIVE_LABEL) &
-         (predicted == POSITIVE_LABEL)).sum()
+        (
+            (actual == POSITIVE_LABEL)
+            & (predicted == POSITIVE_LABEL)
+        ).sum()
     )
 
     tn = int(
-        ((actual == NEGATIVE_LABEL) &
-         (predicted == NEGATIVE_LABEL)).sum()
+        (
+            (actual == NEGATIVE_LABEL)
+            & (predicted == NEGATIVE_LABEL)
+        ).sum()
     )
 
     fp = int(
-        ((actual == NEGATIVE_LABEL) &
-         (predicted == POSITIVE_LABEL)).sum()
+        (
+            (actual == NEGATIVE_LABEL)
+            & (predicted == POSITIVE_LABEL)
+        ).sum()
     )
 
     fn = int(
-        ((actual == POSITIVE_LABEL) &
-         (predicted == NEGATIVE_LABEL)).sum()
+        (
+            (actual == POSITIVE_LABEL)
+            & (predicted == NEGATIVE_LABEL)
+        ).sum()
     )
 
     return {
@@ -112,14 +179,32 @@ def calculate_confusion_matrix(data):
         "TN": tn,
         "FP": fp,
         "FN": fn,
-        "Total": tp + tn + fp + fn
+        "Valid_Classifications": tp + tn + fp + fn,
+        "Missing_Predictions": int(
+            df["predicted_label"].isna().sum()
+        ),
     }
 
 
+# ==========================================================
+# SAFE DIVISION
+# ==========================================================
+
+def safe_divide(numerator, denominator):
+
+    if denominator == 0:
+        return np.nan
+
+    return numerator / denominator
+
+
+# ==========================================================
+# CLASSIFICATION METRICS
+# ==========================================================
+
 def calculate_classification_metrics(data):
     """
-    Calculate accuracy, precision, recall,
-    specificity, false positive rate and F1-score.
+    Calculate overall classification metrics.
     """
 
     cm = calculate_confusion_matrix(data)
@@ -128,12 +213,6 @@ def calculate_classification_metrics(data):
     tn = cm["TN"]
     fp = cm["FP"]
     fn = cm["FN"]
-
-    def safe_divide(numerator, denominator):
-        if denominator == 0:
-            return np.nan
-
-        return numerator / denominator
 
     accuracy = safe_divide(
         tp + tn,
@@ -163,200 +242,337 @@ def calculate_classification_metrics(data):
     f1_score = safe_divide(
         2 * precision * recall,
         precision + recall
-    )
+    ) if pd.notna(precision) and pd.notna(recall) else np.nan
 
     return {
-        "N_Classifications": cm["Total"],
-        "TP": tp,
-        "TN": tn,
-        "FP": fp,
-        "FN": fn,
+        **cm,
         "Accuracy": accuracy,
         "Precision": precision,
         "Recall": recall,
         "Specificity": specificity,
         "False_Positive_Rate": false_positive_rate,
-        "F1_Score": f1_score
+        "F1_Score": f1_score,
     }
 
+
+# ==========================================================
+# METRIC CALCULATION FOR BOOTSTRAP
+# ==========================================================
+
+def get_metric_value(data, metric):
+    """
+    Calculate one metric from a participant-resampled dataset.
+    """
+
+    df = data.dropna(
+        subset=["predicted_label"]
+    )
+
+    if df.empty:
+        return np.nan
+
+    actual = df["true_label"]
+    predicted = df["predicted_label"]
+
+    tp = int(
+        (
+            (actual == POSITIVE_LABEL)
+            & (predicted == POSITIVE_LABEL)
+        ).sum()
+    )
+
+    tn = int(
+        (
+            (actual == NEGATIVE_LABEL)
+            & (predicted == NEGATIVE_LABEL)
+        ).sum()
+    )
+
+    fp = int(
+        (
+            (actual == NEGATIVE_LABEL)
+            & (predicted == POSITIVE_LABEL)
+        ).sum()
+    )
+
+    fn = int(
+        (
+            (actual == POSITIVE_LABEL)
+            & (predicted == NEGATIVE_LABEL)
+        ).sum()
+    )
+
+    metrics = {
+        "accuracy": safe_divide(
+            tp + tn,
+            tp + tn + fp + fn
+        ),
+        "precision": safe_divide(
+            tp,
+            tp + fp
+        ),
+        "recall": safe_divide(
+            tp,
+            tp + fn
+        ),
+        "specificity": safe_divide(
+            tn,
+            tn + fp
+        ),
+        "f1": safe_divide(
+            2 * tp,
+            2 * tp + fp + fn
+        ),
+    }
+
+    if metric not in metrics:
+        raise ValueError(
+            f"Unsupported bootstrap metric: {metric}"
+        )
+
+    return metrics[metric]
+
+
+# ==========================================================
+# PARTICIPANT-LEVEL BOOTSTRAP CI
+# ==========================================================
 
 def bootstrap_participant_ci(
     data,
     metric,
     iterations=BOOTSTRAP_ITERATIONS,
-    seed=RANDOM_SEED
+    seed=RANDOM_SEED,
 ):
     """
-    Calculate a 95% bootstrap confidence interval.
+    Calculate a percentile 95% bootstrap confidence interval.
 
-    Resampling is performed at participant level,
-    not at individual email-response level.
-
-    metric must be the name of a numeric column.
+    Entire participants are sampled with replacement.
+    All responses belonging to each selected participant
+    remain together in each bootstrap sample.
     """
 
-    required = {"participant_id", metric}
+    df = validate_classification_data(data)
 
-    missing = required - set(data.columns)
+    participants = df[
+        "participant_id"
+    ].dropna().unique()
 
-    if missing:
+    if len(participants) < 2:
         raise ValueError(
-            f"Missing columns for bootstrap: {sorted(missing)}"
+            "At least two participants are required."
         )
 
-    if iterations < 1:
-        raise ValueError(
-            "Bootstrap iterations must be positive."
+    participant_groups = {
+        participant: group
+        for participant, group in df.groupby(
+            "participant_id"
         )
-
-    df = data[["participant_id", metric]].copy()
-
-    df[metric] = pd.to_numeric(
-        df[metric],
-        errors="coerce"
-    )
-
-    # First calculate one metric value per participant.
-    participant_values = (
-        df.groupby("participant_id")[metric]
-        .mean()
-        .dropna()
-        .to_numpy(dtype=float)
-    )
-
-    n = len(participant_values)
-
-    if n == 0:
-        raise ValueError(
-            "No valid participant-level metric values."
-        )
-
-    estimate = float(participant_values.mean())
-
-    # A confidence interval cannot be reliably estimated
-    # from only one participant.
-    if n < 2:
-        return {
-            "metric": metric,
-            "n_participants": n,
-            "estimate": estimate,
-            "ci_lower": np.nan,
-            "ci_upper": np.nan
-        }
+    }
 
     rng = np.random.default_rng(seed)
 
-    bootstrap_samples = rng.choice(
-        participant_values,
-        size=(iterations, n),
-        replace=True
+    estimates = []
+
+    for _ in range(iterations):
+
+        selected = rng.choice(
+            participants,
+            size=len(participants),
+            replace=True,
+        )
+
+        sampled_data = pd.concat(
+            [
+                participant_groups[participant]
+                for participant in selected
+            ],
+            ignore_index=True,
+        )
+
+        value = get_metric_value(
+            sampled_data,
+            metric,
+        )
+
+        if pd.notna(value):
+            estimates.append(value)
+
+    if len(estimates) < iterations * 0.90:
+        raise ValueError(
+            "Too many invalid bootstrap estimates."
+        )
+
+    alpha = 1 - CONFIDENCE_LEVEL
+
+    lower, upper = np.quantile(
+        estimates,
+        [
+            alpha / 2,
+            1 - alpha / 2,
+        ],
     )
 
-    bootstrap_means = bootstrap_samples.mean(axis=1)
-
-    ci_lower, ci_upper = np.percentile(
-        bootstrap_means,
-        [2.5, 97.5]
+    estimate = get_metric_value(
+        df,
+        metric,
     )
 
     return {
         "metric": metric,
-        "n_participants": n,
         "estimate": estimate,
-        "ci_lower": float(ci_lower),
-        "ci_upper": float(ci_upper)
+        "ci_lower": float(lower),
+        "ci_upper": float(upper),
+        "confidence_level": CONFIDENCE_LEVEL,
+        "participants": len(participants),
+        "bootstrap_iterations": len(estimates),
     }
 
+
+# ==========================================================
+# SOURCE-SPECIFIC PHISHING RECALL
+# ==========================================================
 
 def calculate_source_recall(data):
     """
-    Compare phishing detection recall for:
+    Compare recall for AI-generated and human-written phishing.
 
-    1. AI-generated phishing
-    2. Human-written phishing
-
-    Each participant contributes one recall value
-    per source group.
+    Only verified phishing examples are included.
+    Each participant contributes a group-level recall.
     """
-
-    required = {
-        "participant_id",
-        "true_label",
-        "predicted_label",
-        "email_source"
-    }
-
-    missing = required - set(data.columns)
-
-    if missing:
-        raise ValueError(
-            f"Missing source columns: {sorted(missing)}"
-        )
 
     df = validate_classification_data(data)
 
-    df["email_source"] = (
-        data.loc[df.index, "email_source"]
-        .astype("string")
-        .str.strip()
-        .str.lower()
-    )
-
-    # Select only verified phishing examples.
-    phishing_data = df[
+    phishing = df[
         (df["true_label"] == POSITIVE_LABEL)
         & (df["email_source"].isin(PHISHING_SOURCES))
+        & df["predicted_label"].notna()
     ].copy()
 
-    phishing_data["detected_correctly"] = (
-        phishing_data["predicted_label"] == POSITIVE_LABEL
-    ).astype(float)
+    phishing["detected_correctly"] = (
+        phishing["predicted_label"] == POSITIVE_LABEL
+    ).astype(int)
 
     results = []
 
     for source in PHISHING_SOURCES:
 
-        subset = phishing_data[
-            phishing_data["email_source"] == source
+        subset = phishing[
+            phishing["email_source"] == source
         ].copy()
 
         if subset.empty:
+
             results.append({
                 "email_source": source,
                 "participants": 0,
-                "classifications": 0,
+                "valid_classifications": 0,
+                "correct_detections": 0,
                 "recall": np.nan,
                 "ci_lower": np.nan,
-                "ci_upper": np.nan
+                "ci_upper": np.nan,
             })
+
             continue
 
-        # Calculate recall separately for each participant.
+        # Pooled recall for descriptive reporting.
+        correct = int(
+            subset["detected_correctly"].sum()
+        )
+
+        total = len(subset)
+
+        pooled_recall = correct / total
+
+        # Each participant's recall is calculated separately.
         participant_recall = (
             subset.groupby("participant_id")
             ["detected_correctly"]
             .mean()
-            .reset_index(name="recall")
         )
 
-        ci = bootstrap_participant_ci(
-            participant_recall,
-            metric="recall",
-            iterations=BOOTSTRAP_ITERATIONS,
-            seed=RANDOM_SEED
+        values = participant_recall.to_numpy(
+            dtype=float
         )
+
+        rng = np.random.default_rng(RANDOM_SEED)
+
+        if len(values) >= 2:
+
+            samples = rng.choice(
+                values,
+                size=(BOOTSTRAP_ITERATIONS, len(values)),
+                replace=True,
+            )
+
+            bootstrap_means = samples.mean(axis=1)
+
+            lower, upper = np.quantile(
+                bootstrap_means,
+                [0.025, 0.975],
+            )
+
+        else:
+            lower = np.nan
+            upper = np.nan
 
         results.append({
             "email_source": source,
-            "participants": ci["n_participants"],
-            "classifications": len(subset),
-            "recall": ci["estimate"],
-            "ci_lower": ci["ci_lower"],
-            "ci_upper": ci["ci_upper"]
+            "participants": len(values),
+            "valid_classifications": total,
+            "correct_detections": correct,
+            "recall": pooled_recall,
+            "participant_mean_recall": float(values.mean()),
+            "ci_lower": lower,
+            "ci_upper": upper,
         })
 
     return pd.DataFrame(results)
 
+
+# ==========================================================
+# SAVE METRIC RESULTS
+# ==========================================================
+
+def save_results(
+    metrics,
+    confidence_intervals,
+    source_results,
+    confusion_matrix,
+):
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    pd.DataFrame([metrics]).to_csv(
+        OUTPUT_DIR / "classification_metrics.csv",
+        index=False,
+    )
+
+    pd.DataFrame(
+        confidence_intervals
+    ).to_csv(
+        OUTPUT_DIR / "classification_confidence_intervals.csv",
+        index=False,
+    )
+
+    source_results.to_csv(
+        OUTPUT_DIR / "phishing_source_metrics.csv",
+        index=False,
+    )
+
+    pd.DataFrame([
+        confusion_matrix
+    ]).to_csv(
+        OUTPUT_DIR / "confusion_matrix.csv",
+        index=False,
+    )
+
+
+# ==========================================================
+# MAIN
+# ==========================================================
 
 def main():
 
@@ -365,54 +581,98 @@ def main():
             f"Processed survey data not found: {INPUT_FILE}"
         )
 
+    print("=" * 60)
+    print("CLASSIFICATION METRICS ANALYSIS")
+    print("=" * 60)
+
     data = pd.read_csv(INPUT_FILE)
 
-    print("=" * 55)
-    print("PHISHING CLASSIFICATION ANALYSIS")
-    print("=" * 55)
+    data = validate_classification_data(data)
 
-    confusion = calculate_confusion_matrix(data)
+    print(
+        "Participants:",
+        data["participant_id"].nunique()
+    )
+
+    print(
+        "Total records:",
+        len(data)
+    )
+
+    print(
+        "Valid predictions:",
+        data["predicted_label"].notna().sum()
+    )
+
+    print(
+        "Missing predictions:",
+        data["predicted_label"].isna().sum()
+    )
+
+    # Overall metrics
+    confusion_matrix = calculate_confusion_matrix(data)
 
     metrics = calculate_classification_metrics(data)
 
+    # Overall participant-level bootstrap intervals
+    confidence_intervals = []
+
+    for metric in [
+        "accuracy",
+        "precision",
+        "recall",
+        "specificity",
+        "f1",
+    ]:
+
+        ci = bootstrap_participant_ci(
+            data,
+            metric=metric,
+        )
+
+        confidence_intervals.append(ci)
+
+    # AI vs Human phishing comparison
     source_results = calculate_source_recall(data)
 
+    # Save outputs
+    save_results(
+        metrics,
+        confidence_intervals,
+        source_results,
+        confusion_matrix,
+    )
+
     print("\nCONFUSION MATRIX")
-    print(pd.Series(confusion).to_string())
+
+    for key, value in confusion_matrix.items():
+        print(f"{key}: {value}")
 
     print("\nCLASSIFICATION METRICS")
 
-    for name, value in metrics.items():
+    for key, value in metrics.items():
+
         if isinstance(value, (float, np.floating)):
-            print(f"{name}: {value:.4f}")
+            print(f"{key}: {value:.4f}")
         else:
-            print(f"{name}: {value}")
+            print(f"{key}: {value}")
+
+    print("\n95% CONFIDENCE INTERVALS")
+
+    print(
+        pd.DataFrame(
+            confidence_intervals
+        ).to_string(index=False)
+    )
 
     print("\nAI VS HUMAN PHISHING")
 
-    print(source_results.to_string(index=False))
-
-    OUTPUT_DIR.mkdir(
-        parents=True,
-        exist_ok=True
+    print(
+        source_results.to_string(index=False)
     )
 
-    pd.DataFrame([metrics]).to_csv(
-        OUTPUT_DIR / "classification_metrics.csv",
-        index=False
-    )
-
-    source_results.to_csv(
-        OUTPUT_DIR / "phishing_source_metrics.csv",
-        index=False
-    )
-
-    pd.DataFrame([confusion]).to_csv(
-        OUTPUT_DIR / "confusion_matrix.csv",
-        index=False
-    )
-
-    print("\nResults saved to:", OUTPUT_DIR)
+    print("\nResults saved in:")
+    print(OUTPUT_DIR)
 
 
 if __name__ == "__main__":
