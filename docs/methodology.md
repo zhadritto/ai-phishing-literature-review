@@ -1,294 +1,135 @@
-# Methodology Passport Card
+# Research Methodology
 
-## 1. Project Information
+## 1. Project information
 
-Title: Human Ability to Detect AI-Generated Phishing Emails:
-A Review of Existing Research
+**Project:** Student Responses to Phishing and Legitimate Email Examples in the Context of AI-Generated Phishing  
+**Authors:** Zhadyra Kurmanova and Meirim Yersultan  
+**Repository:** https://github.com/zhadritto/ai-phishing-literature-review  
+**Study component:** Descriptive analysis of a student email-classification survey.
 
-Authors:
-- Zhadyra Kurmanova
-- Meirim Yersultan
+This document describes the survey analysis reported in `paper_draft.md`. The repository also contains a separate synthetic benchmark used to demonstrate a Python measurement pipeline. Synthetic benchmark outputs are not survey findings and must not be combined with the survey results.
 
-Repository:
-https://github.com/zhadritto/ai-phishing-literature-review
+## 2. Research question and scope
 
-Status: Research planning and measurement pipeline development.
-No participant data have been collected.
+**RQ1:** What response patterns are observed when participants classify the 12 email examples as phishing or legitimate?
 
-The literature review will inform the proposed experiment.
-For Task 2, we prepare its methodology and a measurement script
-using synthetic sample data.
+The current survey supports descriptive summaries of the selected response categories. It does not support a verified comparison of AI-generated phishing with human-written phishing because the public project archive does not contain a complete, independently verifiable source mapping for every email example.
 
-## 2. Research Questions
+The study does not test the performance of an automated phishing detector. It does not estimate objective detection accuracy unless a verified answer key and the original participant-level response file are available and validated.
 
-The research questions are inherited from Task 1.
+## 3. Research design
 
-**RQ1:** What levels of human detection accuracy for AI-generated phishing emails are reported in existing research?
+The survey uses a quantitative, descriptive design. Participants classify email examples into two response categories:
 
-**RQ2:** How accurately can participants identify AI-generated phishing emails and distinguish them from legitimate emails?
+- `phishing`
+- `legitimate`
 
-The survey includes 6 AI-generated phishing emails and 6 legitimate emails. It does not include human-written phishing emails. Therefore, the study cannot directly compare AI-generated and human-written phishing detection.
+The supplied survey export contains 27 participant records and 12 email-classification questions, producing 324 possible classifications. The unit of analysis for the published response-frequency tables is the classification, aggregated by email example.
 
-**RQ3:** What factors influence people's ability to identify AI-generated phishing emails?
+The exact recruitment method, eligibility criteria, survey presentation order, randomization procedure, and participant instructions should be described from the original survey protocol. Do not infer or invent these details.
 
-RQ2 is the primary focus of the Task 2 measurement pipeline.
+## 4. Dataset and variables
 
-## 3. Research Type
+### 4.1 Available survey data
 
-The proposed experiment uses mixed methods.
+The local original survey export is processed into a long-format dataset with one record per participant and email example. The public aggregate file `data/processed/email_classification_summary.csv` contains one row per email example and response counts.
 
-The quantitative component measures phishing detection recall,
-false positive rate, response time, and confidence.
+The observed aggregate results in the supplied export are:
 
-The qualitative component examines participants' explanations
-of the features they used to classify emails.
+- Participants: 27.
+- Email examples: 12.
+- Total classifications: 324.
+- Phishing selections: 181 (55.9%).
+- Legitimate selections: 143 (44.1%).
+- Missing or unrecognized email classifications: 0 in the supplied export.
 
-This combination allows us to examine both detection performance
-and the reasons behind classification decisions.
+These are response frequencies, not measures of accuracy.
 
-The current script implements the quantitative measurement
-component only.
+### 4.2 Variables
 
-## 4. Hypotheses and Variables
-
-The hypotheses are inherited from Task 1 and organized around three research questions.
-
-### RQ1: Reported Detection Accuracy
-
-**H0:** Reported human detection accuracy for AI-generated phishing emails does not differ from chance-level performance and does not vary meaningfully across study conditions.
-
-**H1:** Reported human detection accuracy for AI-generated phishing emails differs from chance-level performance and varies across study conditions.
-
-- Independent variables: Study and email conditions, including AI-generation method, personalization, styling, training, and study design.
-- Dependent variable: Reported human detection accuracy.
-- Potential confounders: Cybersecurity knowledge, previous experience, age, education, email quality, and measurement method.
-
-RQ1 is primarily descriptive and will be addressed through synthesis of published research. The current benchmark does not compare multiple published studies or directly test chance-level performance.
-
-### RQ2: Comparison of AI-Generated and Human-Written Phishing
-
-**H0:** There is no significant difference between people's ability to identify AI-generated phishing emails and traditional human-written phishing emails.
-
-**H1:** People are less able to identify AI-generated phishing emails than traditional human-written phishing emails.
-
-- Independent variable: Email authorship (AI-generated or human-written).
-- Dependent variable: Human phishing-detection accuracy.
-- Potential confounders: Cybersecurity knowledge, previous experience, training, age, education, email quality, grammatical errors, personalization, and study design.
-
-RQ2 is the primary focus of the Task 2 measurement plan.
-
-The benchmark calculates detection recall for each phishing category:
-
-- Recall_AI = TP_AI / (TP_AI + FN_AI)
-- Recall_Human = TP_Human / (TP_Human + FN_Human)
-
-The primary descriptive comparison is:
-
-Difference = Recall_AI − Recall_Human
-
-A negative difference is consistent with the direction of H1. However, statistical inference using real participant data would be required to evaluate whether the observed difference is statistically significant.
-
-### RQ3: Human Factors Influencing Detection Accuracy
-
-**H0:** Cybersecurity awareness, previous phishing experience, and security-awareness training are not significantly associated with detection accuracy.
-
-**H1:** Higher cybersecurity awareness, previous phishing experience, and security-awareness training are associated with higher accuracy in detecting AI-generated phishing emails.
-
-- Independent variables: Cybersecurity awareness, previous phishing experience, and security-awareness training.
-- Dependent variable: Human phishing-detection accuracy.
-- Potential confounders: Age, education, technical experience, occupation, email complexity, personalization, AI model, and experimental design.
-
-RQ3 will be addressed through published literature and may be examined empirically in future research if the required participant-level variables are collected.
-
-### Scope and Limitations
-
-The current Task 2 benchmark operationalizes RQ2 using a reproducible Python measurement pipeline.
-
-RQ1 and RQ3 are retained to maintain consistency with Task 1, but the present implementation does not independently test all three research questions.
-
-The included synthetic dataset is used only for demonstrating and validating the calculation pipeline. No conclusions about real human phishing-detection ability are drawn from synthetic results.
-
-## 5. Variable Matrix
-
-| Type | Variable | Definition |
+| Variable | Role | Definition |
 |---|---|---|
-| Independent | Source of phishing email | AI-generated or human-written |
-| Dependent | Correct detection | Phishing correctly identified: 1; missed: 0 |
-| Dependent | Response time | Seconds taken to classify an email |
-| Dependent | Confidence | Participant rating from 1 to 5 |
-| Controlled | Instructions | Identical instructions for all participants |
-| Controlled | Interface | Identical display and response options |
-| Controlled | Test set | Fixed, versioned set of safe email mockups |
-| Controlled | Category counts | Equal numbers of AI and human phishing emails |
-| Controlled | Email characteristics | Matched topics, approximate length, and difficulty |
-| Controlled | Analysis environment | Specified Python runtime and versioned script |
+| `participant_id` | Identifier | Pseudonymous identifier generated during local processing |
+| `email_id` | Grouping variable | Identifier of an email example |
+| `predicted_label` | Observed response | Participant selection: `phishing` or `legitimate` |
+| `true_label` | Ground truth | Independently verified correct class of an email |
+| `email_source` | Stimulus provenance | Documented origin or generation method of an email |
+| `age_group` | Descriptive variable | Participant's age category as collected in the survey |
+| `cyber_knowledge` | Descriptive variable | Self-reported cybersecurity knowledge |
+| `phishing_experience` | Descriptive variable | Self-reported previous phishing experience |
+| `first_indicator` | Descriptive variable | First indicator noticed by the participant |
+| `confidence` | Secondary measure | Self-reported confidence, if collected and complete |
 
-Presentation order will be randomised and recorded.
-Randomisation is a procedural control, not a fixed presentation order.
+Confidence responses are incomplete in the supplied export and must not be treated as a complete group-level measure.
 
-Cybersecurity experience will be recorded as a participant
-characteristic. It is not a randomly assigned variable.
+## 5. Data collection and privacy
 
-## 6. Primary Metric
+The survey export supplied for this analysis contains 27 records dated November 5, 2026. The actual recruitment method, eligibility criteria, presentation order, and consent procedure must be documented from the original survey materials; this methodology does not invent them.
 
-Phishing detection recall:
+Raw survey exports must be stored in restricted local storage and must not be committed to the public repository. Before publication, direct identifiers and indirect identifiers that could reveal a participant must be removed or appropriately protected. Only reviewed aggregate outputs should be published.
 
-Recall = TP / (TP + FN)
+Because the supplied responses include participants under 18, the authors must verify institutional requirements for research involving minors, including the required participant assent and parent/guardian permission where applicable. Do not claim approval or consent unless supported by the actual records.
 
-TP: A phishing email correctly classified as phishing.
-FN: A phishing email incorrectly classified as legitimate.
+## 6. Data processing
 
-Recall is calculated separately for AI-generated phishing
-and human-written phishing.
+Python and Pandas are used to inspect and summarize survey responses.
 
-Primary comparison:
+The processing sequence is:
 
-Recall_AI - Recall_Human
+1. Load the original survey export from restricted local storage.
+2. Inspect column names, data types, missing values, and duplicate records.
+3. Map the 12 email-question columns explicitly and verify the mapping against the questionnaire.
+4. Normalize participant selections to `phishing` and `legitimate`; ambiguous answers remain unclassified.
+5. Reshape the responses into one record per participant and email example.
+6. Generate aggregate response counts and percentages.
+7. Save participant-level intermediate files locally and publish only approved aggregate outputs.
 
-A negative difference indicates lower detection recall for AI
-phishing. A positive difference indicates higher recall for AI
-phishing.
+The raw CSV is not modified by the processing script.
 
-The main study will calculate recall per participant and account
-for repeated measurements when comparing conditions.
+## 7. Analysis plan
 
-## 7. Guardrail Metrics
+### 7.1 Descriptive measures
 
-### False Positive Rate
+For each email example:
 
-FPR = FP / (FP + TN)
+\[
+\text{Phishing selection percentage} = \frac{n_{phishing}}{n_{phishing}+n_{legitimate}} \times 100.
+\]
 
-FP: A legitimate email incorrectly classified as phishing.
-TN: A legitimate email correctly classified as legitimate.
+The overall response distribution is calculated by summing selections across all 12 examples:
 
-The provisional threshold is FPR <= 0.20. This represents a
-project-defined tolerance of no more than one false alarm per
-five legitimate-email classifications.
+\[
+\text{Overall category percentage} = \frac{N_{category}}{N_{valid\ classifications}} \times 100.
+\]
 
-We use this threshold to identify excessive false alarms that
-could make a detection strategy impractical. It is a planning
-criterion, not a published standard or an empirically validated
-cut-off.
+These values describe participants' choices only.
 
-During the pilot, we will assess whether this tolerance is
-appropriate. Any revision will be documented and fixed before
-main data collection. We will report the observed FPR regardless
-of whether it passes the threshold.
+### 7.2 Classification performance measures
 
-### Data Validity
+Accuracy, precision, recall, specificity, F1-score, and a confusion matrix require participant predictions and a verified answer key for all email examples. A complete key must include a correct class and documented source for each email, and the labels must be checked against the original stimuli.
 
-Target: zero invalid records in an accepted input dataset.
+The processing script keeps accuracy disabled by default. Enable it only after independent verification of all 12 email labels and sources and after reproducing the results from the original response export. Never use an old summary CSV or a chart as a substitute for source data and a verified answer key.
 
-The script rejects:
-- Missing required values.
-- Unknown email categories or response labels.
-- Duplicate participant-email responses.
-- Non-positive or non-finite response times.
-- Confidence ratings outside the integer range 1 to 5.
-- Inconsistent categories for the same email identifier.
+### 7.3 Confidence and response time
 
-## 8. Secondary Metrics
+Confidence and response-time analyses are not included unless the original data contain complete, valid measurements and the survey protocol confirms how these variables were collected.
 
-- False negative rate: FN / (TP + FN).
-- Mean response time in seconds.
-- Mean confidence rating from 1 to 5.
+## 8. Repeated observations
 
-False negative rate equals 1 minus recall. It is reported for
-interpretation rather than treated as an independent outcome.
+Each participant evaluates multiple email examples. Therefore, individual email classifications from one participant are repeated observations and should not be treated as 324 independent participants in inferential statistical tests. The current report uses descriptive frequencies only.
 
-## 9. Baseline
+## 9. Validity and limitations
 
-Baseline condition: Human-written phishing emails.
+The study includes 27 participant records and 12 email examples. The findings should not be generalized to a wider population without further sampling. The public aggregate file does not permit an independent participant-level reanalysis. The source and correct label of every email example must be documented before objective detection performance or AI-authorship claims can be made. Confidence responses are incomplete. These limitations must remain visible in the paper.
 
-Experimental condition: AI-generated phishing emails.
+## 10. Ethics
 
-Legitimate emails are a separate category used to measure
-false alarms.
+The authors must verify the institution's requirements and document the actual consent process. Because the supplied survey export includes participants under 18, the authors must confirm the applicable assent and parent/guardian permission requirements with the institution before external publication. This document does not claim an ethics approval identifier that is not documented in project records.
 
-The same participants will assess both phishing conditions.
-The email sets must be comparable in topic, length, and difficulty.
+## 11. Separate synthetic benchmark
 
-## 10. Planned Procedure
+The files `src/benchmark.py`, `config.json`, and `data/sample/responses.csv` form a separate synthetic demonstration pipeline. The sample is constructed test data used to demonstrate metric calculation for hypothetical email categories. It is not part of the 27-participant survey and must never be used to populate the survey paper's Results section.
 
-1. Obtain informed consent.
-2. Record relevant cybersecurity experience.
-3. Present identical instructions.
-4. Show safe email mockups in randomised order.
-5. Ask participants to select phishing or legitimate.
-6. Record response time and confidence.
-7. Collect short explanations of classification decisions.
-8. Calculate detection metrics.
-9. Compare phishing conditions using paired participant data.
+## 12. Reproducibility
 
-The classification interface and participant recruitment are
-planned work. The current script processes recorded responses.
-
-## 11. Analysis Plan
-
-The Task 2 script calculates descriptive metrics from a sample.
-
-For the main study, recall will be calculated for each participant
-in both phishing conditions.
-
-The statistical test and sample size justification will be specified
-before main data collection. Effect estimates and confidence
-intervals will be reported.
-
-Repeated answers from one participant will not be treated as
-independent participants. A fuller analysis may also account
-for differences between individual emails.
-
-Qualitative explanations will be coded into categories such as
-sender information, urgency, links, and language cues.
-
-## 12. Threats to Validity
-
-| Threat | Planned mitigation |
-|---|---|
-| Unequal email difficulty | Match scenarios and pilot the email set |
-| Learning and order effects | Randomise and record presentation order |
-| Limited participant diversity | Recruit participants with different experience levels |
-| Increased suspicion during testing | Use consistent instructions and acknowledge the limitation |
-| Prior exposure to messages | Separate training and test examples |
-| Laboratory conditions | Acknowledge limits when generalising to real email use |
-
-Randomisation reduces systematic order bias but does not remove
-all learning effects.
-
-## 13. Ethics
-
-Only safe email mockups will be used, without harmful links
-or attachments.
-
-Participation will be voluntary, with informed consent.
-
-Public data will use anonymous participant identifiers.
-Personal information and consent records will not be published.
-
-## 14. Reproducibility
-
-The repository includes:
-- A README with launch instructions.
-- This methodology card.
-- A Dockerfile specifying the Python image version.
-- A configuration file.
-- An executable measurement script.
-- Eight synthetic sample records.
-- A .gitignore file.
-- An MIT license.
-
-The script prints calculated metrics and saves a JSON output file.
-
-The Docker base image is pinned by version and SHA-256 digest.
-The script uses only the Python standard library, so no external Python packages are required.
-
-## 15. Expected Outcome at This Stage
-
-A successful sample run will demonstrate that the measurement
-pipeline reads valid input and calculates the expected metrics.
-
-Synthetic sample results are not research findings and cannot
-support accepting or rejecting the research hypotheses.
-
-The literature review, participant recruitment, data collection,
-and inferential analysis remain future work.
+The public repository supports the synthetic benchmark and regeneration of descriptive response-frequency charts from the committed aggregate CSV. Processing the original participant-level survey requires the private local CSV. The raw file and any identifying fields must not be uploaded to public CI.
