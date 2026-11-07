@@ -180,19 +180,6 @@ The public repository must not contain:
 
 Only reviewed aggregate results, source code, and approved documentation may be published.
 
-## 7. STRIDE Threat Model
-
-The STRIDE methodology is used to identify threats affecting the research data-processing workflow.
-
-| STRIDE Category | Threat Scenario | Protected Component | Potential Impact | Mitigation |
-|---|---|---|---|---|
-| Spoofing | An unauthorized person submits responses while impersonating another participant | Google Forms | Invalid or duplicated survey responses | Restrict survey access where appropriate and inspect duplicate records |
-| Tampering | A participant or unauthorized user modifies survey data or the email answer key | Raw CSV and Email Answer Key | Incorrect research results | Restrict file permissions, maintain protected backups, and validate input data |
-| Repudiation | A researcher changes a dataset or analysis result without preserving a record of the change | Processing Scripts and Research Outputs | Reduced research accountability | Use Git commit history and preserve versioned analysis scripts |
-| Information Disclosure | Private participant information is accidentally committed to GitHub | Raw Data Storage and Public Repository | Exposure of personal information | Apply `.gitignore`, inspect staged files, and publish only approved aggregate outputs |
-| Denial of Service | A malformed or excessively large input file causes the processing pipeline to fail | Data Processing Module | Interrupted analysis | Validate file size and schema, handle exceptions, and test invalid inputs |
-| Elevation of Privilege | An unauthorized user gains access to restricted research files or repository credentials | Local Storage and GitHub | Unauthorized access or modification | Use least-privilege access, protect credentials, and enable appropriate account security controls |
-
 ## 8. Security Controls
 
 The following controls are included in the project workflow:
