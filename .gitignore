@@ -1,52 +1,31 @@
 
-# Python environments
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
 .venv/
 venv/
 env/
 
-# Python cache and build files
-__pycache__/
-*.py[cod]
-*.egg-info/
-build/
-dist/
-
 # Jupyter
 .ipynb_checkpoints/
-*.nbconvert.ipynb
+*.ipynb_checkpoints/
 
-# Secrets and local configuration
-.env
-.env.*
-!.env.example
-secrets/
-*.pem
-*.key
-
-# Private research data
-data/raw/
-data/private/
+# Private survey data
+data/raw/responses.csv
 data/processed/student_responses_long.csv
-data/processed/participant_metrics_local.csv
-data/processed/private_*.csv
 
-# Private documents
-consent/
-references/pdfs/
+# Other private exports
+*.xlsx
+*.xls
 
-# Temporary outputs
-results/
-*.log
+# Temporary files
 .DS_Store
-Thumbs.db
+*.log
+*.tmp
 
-# Model and binary artifacts
-*.pkl
-*.pickle
-*.joblib
-*.h5
-*.hdf5
-*.pt
-*.pth
-*.onnx
-*.safetensors
+# Keep benchmark logs and approved research metadata
+!data/raw/test_run.jsonl
+!data/metadata/email_answer_key.csv
