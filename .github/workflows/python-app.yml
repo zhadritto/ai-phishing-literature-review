@@ -1,10 +1,15 @@
-name: Project validation
+
+name: Project Validation
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+
   workflow_dispatch:
 
 permissions:
@@ -12,35 +17,214 @@ permissions:
 
 jobs:
   validate:
+    name: Validate Research Pipeline
+
     runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
     steps:
-      - name: Check out repository
+
+      # -----------------------------------------------
+      # 1. Checkout repository
+      # -----------------------------------------------
+
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      # -----------------------------------------------
+      # 2. Setup Python
+      # -----------------------------------------------
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # -----------------------------------------------
+      # 3. Install dependencies
+      # -----------------------------------------------
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
-      - name: Compile Python source files
-        run: python -m compileall -q src
+      # -----------------------------------------------
+      # 4. Compile Python files
+      # -----------------------------------------------
+
+      - name: Check Python syntax
+        run: |
+          python -m compileall -q src tests
+
+      # -----------------------------------------------
+      # 5. Run automated tests
+      # -----------------------------------------------
+
+      - name: Run unit tests
+        run: |
+          python -m pytest -q
+
+      # -----------------------------------------------
+      # 6. Generate benchmark measurements
+      # -----------------------------------------------
 
       - name: Run synthetic benchmark
-        run: python src/benchmark.py
-
-      - name: Validate and visualize public survey aggregates
-        run: python src/visualize_survey.py
-
-      - name: Check generated outputs
         run: |
-          test -s results/sample_metrics.json
-          test -s reports/figures/email_response_distribution.png
-          test -s reports/figures/email_response_distribution.pdf
-          test -s reports/figures/phishing_selection_percentage_by_email.png
-          test -s reports/figures/phishing_selection_percentage_by_email.pdf
+          python src/benchmark.py
+
+      # -----------------------------------------------
+      # 7. Process benchmark measurements
+      # -----------------------------------------------
+
+      - name: Calculate statistical metrics
+        run: |
+          python src/process_data.py
+
+      # -----------------------------------------------
+      # 8. Generate scientific figures
+      # -----------------------------------------------
+
+      - name: Generate benchmark visualizations
+        run: |
+          python src/visualize.py
+
+      # -----------------------------------------------
+      # 9. Validate generated artifacts
+      # -----------------------------------------------
+
+      - name: Validate benchmark outputs
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          import pandas as pd
+          from PIL import Image
+
+          root = Path(".")
+
+          required_files = [
+              "data/raw/test_run.jsonl",
+              "data/processed/metrics_summary.csv",
+              "data/processed/speedup_summary.csv",
+              "data/processed/benchmark_error_summary.csv",
+              "reports/figures/fig1_latency_vs_load.png",
+              "reports/figures/fig1_latency_vs_load.pdf",
+              "reports/figures/fig2_distribution_boxplot.png",
+              "reports/figures/fig2_distribution_boxplot.pdf",
+          ]
+
+          for filename in required_files:
+              path = root / filename
+
+              if not path.exists():
+                  raise FileNotFoundError(filename)
+
+              if path.stat().st_size == 0:
+                  raise ValueError(f"Empty artifact: {filename}")
+
+              print("Verified:", filename)
+
+          # Validate JSONL record count and structure.
+          log_path = root / "data/raw/test_run.jsonl"
+
+          with log_path.open(encoding="utf-8") as file:
+              records = [
+                  json.loads(line)
+                  for line in file
+                  if line.strip()
+              ]
+
+          assert len(records) == 280, (
+              f"Expected 280 records, found {len(records)}"
+          )
+
+          # Validate summary table.
+          metrics = pd.read_csv(
+              root / "data/processed/metrics_summary.csv"
+          )
+
+          assert len(metrics) == 8
+          assert set(metrics["method"]) == {
+              "baseline",
+              "proposed"
+          }
+
+          assert metrics["run_count_complete"].all()
+
+          assert (
+              metrics["successful_runs"]
+              + metrics["failed_runs"]
+              == metrics["evaluation_attempts"]
+          ).all()
+
+          # Validate PNG resolution.
+          for filename in [
+              "fig1_latency_vs_load.png",
+              "fig2_distribution_boxplot.png",
+          ]:
+              image_path = root / "reports/figures" / filename
+
+              with Image.open(image_path) as image:
+                  dpi = image.info.get("dpi", (0, 0))
+
+                  assert dpi[0] >= 299
+                  assert dpi[1] >= 299
+
+          # Validate PDF vector exports.
+          for filename in [
+              "fig1_latency_vs_load.pdf",
+              "fig2_distribution_boxplot.pdf",
+          ]:
+              pdf_path = root / "reports/figures" / filename
+
+              assert pdf_path.read_bytes().startswith(b"%PDF-")
+
+          print("\nAll benchmark artifact checks passed.")
+          PY
+
+      # -----------------------------------------------
+      # 10. Validate notebook format
+      # -----------------------------------------------
+
+      - name: Validate Jupyter Notebook
+        run: |
+          python - <<'PY'
+          import nbformat
+
+          notebook = nbformat.read(
+              "notebooks/01_data_analysis.ipynb",
+              as_version=4
+          )
+
+          nbformat.validate(notebook)
+
+          assert len(notebook.cells) > 0
+
+          print("Notebook structure is valid.")
+          print("Cells:", len(notebook.cells))
+          PY
+
+      # -----------------------------------------------
+      # 11. Upload generated benchmark artifacts
+      # -----------------------------------------------
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            data/raw/test_run.jsonl
+            data/processed/metrics_summary.csv
+            data/processed/speedup_summary.csv
+            data/processed/benchmark_error_summary.csv
+            reports/figures/fig1_latency_vs_load.png
+            reports/figures/fig1_latency_vs_load.pdf
+            reports/figures/fig2_distribution_boxplot.png
+            reports/figures/fig2_distribution_boxplot.pdf
+
+          if-no-files-found: error
