@@ -20,10 +20,7 @@ OUTPUT_DIR = ROOT / "data" / "processed"
 POSITIVE_LABEL = "phishing"
 NEGATIVE_LABEL = "legitimate"
 
-PHISHING_SOURCES = [
-    "ai_generated",
-    "human_written",
-]
+PHISHING_SOURCES = ["ai_generated"]
 
 BOOTSTRAP_ITERATIONS = 5000
 RANDOM_SEED = 42
@@ -432,101 +429,72 @@ def bootstrap_participant_ci(
 # SOURCE-SPECIFIC PHISHING RECALL
 # ==========================================================
 
+
+# ==========================================================
+# RECALL BY AI-GENERATED PHISHING EMAIL
+# ==========================================================
+
 def calculate_source_recall(data):
     """
-    Compare recall for AI-generated and human-written phishing.
+    Calculate detection recall separately for each of the
+    six AI-generated phishing examples.
 
-    Only verified phishing examples are included.
-    Each participant contributes a group-level recall.
+    Bootstrap confidence intervals resample participants.
     """
 
     df = validate_classification_data(data)
 
     phishing = df[
         (df["true_label"] == POSITIVE_LABEL)
-        & (df["email_source"].isin(PHISHING_SOURCES))
-        & df["predicted_label"].notna()
+        & (df["email_source"] == "ai_generated")
     ].copy()
 
-    phishing["detected_correctly"] = (
-        phishing["predicted_label"] == POSITIVE_LABEL
-    ).astype(int)
+    expected_ids = {
+        f"email_{i:02d}"
+        for i in [1, 3, 5, 7, 9, 11]
+    }
+
+    if set(phishing["email_id"]) != expected_ids:
+        raise ValueError(
+            "Expected exactly six AI-generated phishing emails."
+        )
 
     results = []
 
-    for source in PHISHING_SOURCES:
+    for email_id, group in phishing.groupby("email_id"):
 
-        subset = phishing[
-            phishing["email_source"] == source
-        ].copy()
+        valid = group.dropna(subset=["predicted_label"])
+        total = len(valid)
 
-        if subset.empty:
-
-            results.append({
-                "email_source": source,
-                "participants": 0,
-                "valid_classifications": 0,
-                "correct_detections": 0,
-                "recall": np.nan,
-                "ci_lower": np.nan,
-                "ci_upper": np.nan,
-            })
-
-            continue
-
-        # Pooled recall for descriptive reporting.
         correct = int(
-            subset["detected_correctly"].sum()
+            (valid["predicted_label"] == POSITIVE_LABEL).sum()
         )
 
-        total = len(subset)
+        recall = safe_divide(correct, total)
 
-        pooled_recall = correct / total
-
-        # Each participant's recall is calculated separately.
-        participant_recall = (
-            subset.groupby("participant_id")
-            ["detected_correctly"]
-            .mean()
-        )
-
-        values = participant_recall.to_numpy(
-            dtype=float
-        )
-
-        rng = np.random.default_rng(RANDOM_SEED)
-
-        if len(values) >= 2:
-
-            samples = rng.choice(
-                values,
-                size=(BOOTSTRAP_ITERATIONS, len(values)),
-                replace=True,
+        if valid["participant_id"].nunique() >= 2:
+            ci = bootstrap_participant_ci(
+                valid,
+                metric="recall",
             )
-
-            bootstrap_means = samples.mean(axis=1)
-
-            lower, upper = np.quantile(
-                bootstrap_means,
-                [0.025, 0.975],
-            )
-
+            lower = ci["ci_lower"]
+            upper = ci["ci_upper"]
         else:
             lower = np.nan
             upper = np.nan
 
         results.append({
-            "email_source": source,
-            "participants": len(values),
+            "email_id": email_id,
+            "email_source": "ai_generated",
+            "participants": valid["participant_id"].nunique(),
             "valid_classifications": total,
             "correct_detections": correct,
-            "recall": pooled_recall,
-            "participant_mean_recall": float(values.mean()),
+            "recall": recall,
             "ci_lower": lower,
             "ci_upper": upper,
         })
 
-    return pd.DataFrame(results)
+    return pd.DataFrame(results).sort_values("email_id")
 
 
 # ==========================================================
@@ -565,7 +533,7 @@ def save_results(
     pd.DataFrame([
         confusion_matrix
     ]).to_csv(
-        OUTPUT_DIR / "confusion_matrix.csv",
+        OUTPUT_DIR / "phishing_email_metrics.csv",
         index=False,
     )
 
@@ -632,7 +600,7 @@ def main():
 
         confidence_intervals.append(ci)
 
-    # AI vs Human phishing comparison
+    # Detection recall for each AI-generated phishing email
     source_results = calculate_source_recall(data)
 
     # Save outputs
@@ -665,7 +633,7 @@ def main():
         ).to_string(index=False)
     )
 
-    print("\nAI VS HUMAN PHISHING")
+   print("\nRECALL BY AI-GENERATED PHISHING EMAIL")
 
     print(
         source_results.to_string(index=False)
