@@ -21,13 +21,19 @@ This document describes the variables used in the research survey and the techni
 | first_indicator | Categorical | First indicator checked |
 | confidence | Numeric | Self-reported confidence, when provided |
 
+
 ## 3. Email Categories
 
 | Category | Email IDs | Count |
 |---|---|---:|
-| AI-generated phishing | email_01, email_05, email_09 | 3 |
-| Human-written phishing | email_03, email_07, email_11 | 3 |
-| Legitimate | email_02, email_04, email_06, email_08, email_10, email_12 | 6 |
+| AI-generated phishing | email_01, email_03, email_05, email_07, email_09, email_11 | 6 |
+| AI-generated legitimate examples | email_02, email_04, email_06, email_08, email_10, email_12 | 6 |
+| **Total** | **email_01–email_12** | **12** |
+
+All 12 email examples were drafted using ChatGPT. The study does not include a verified human-written email group.
+
+The `true_label` variable identifies whether an email is phishing or legitimate. The `email_source` variable identifies its authorship. These variables are treated separately.
+
 
 ## 4. Benchmark Variables
 
