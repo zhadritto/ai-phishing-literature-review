@@ -40,7 +40,7 @@ The study has the following objectives:
 
 **H3.** Participants' detection performance differs between the selected AI-generated and human-written phishing examples.
 
-These hypotheses are exploratory and will be evaluated using the collected survey data.
+These hypotheses are exploratory and are evaluated using the collected survey data.
 
 ## 6. Operational Definitions
 
@@ -78,4 +78,4 @@ Self-reported cybersecurity knowledge does not represent an objective cybersecur
 | RQ3 | Cybersecurity knowledge and previous experience | Group-level descriptive and exploratory analysis |
 | RQ4 | First detection indicator | Frequency and percentage distribution |
 
-The analysis will use verified ground-truth labels and participant responses. No results will be reported before the data validation and processing stages are completed.
+The analysis will use verified ground-truth labels and participant responses. The analysis uses verified ground-truth labels and participant responses from 27 participants, covering 324 email classifications. Results are reported in the research paper and README.md. Comparisons between AI-generated and human-written phishing emails are interpreted cautiously due to the limited number of stimuli.
