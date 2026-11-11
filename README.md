@@ -6,7 +6,7 @@ This research examines human ability to identify phishing emails in the context 
 
 The project combines a review of existing cybersecurity research with a quantitative student survey and a separate technical performance benchmark of the Python data-processing pipeline.
 
-The empirical survey focuses on how students classify AI-generated phishing emails, human-written phishing emails, and legitimate email examples.
+The empirical survey examines how students distinguish six AI-generated phishing messages from six AI-generated legitimate-style messages. All twelve stimuli were created using ChatGPT; no human-written comparison group was included.
 
 The technical benchmark evaluates the execution performance of two data-processing implementations under different synthetic workloads.
 
@@ -18,7 +18,7 @@ The technical benchmark evaluates the execution performance of two data-processi
 
 1. Review existing research on human phishing detection.
 2. Examine how accurately students identify AI-generated phishing emails.
-3. Compare participant responses to selected AI-generated and human-written phishing examples.
+3. Compare detection recall across the six AI-generated phishing examples.
 4. Explore the relationship between self-reported cybersecurity knowledge and phishing detection performance.
 5. Identify the indicators participants primarily use when evaluating suspicious emails.
 6. Evaluate the performance of the research data-processing pipeline.
@@ -26,7 +26,7 @@ The technical benchmark evaluates the execution performance of two data-processi
 ## 3. Research Questions
 
 - **RQ1:** How accurately can university students identify AI-generated phishing emails?
-- **RQ2:** Is there a difference in participants' ability to detect AI-generated and human-written phishing emails?
+- **RQ2:** How does detection recall vary across the six AI-generated phishing examples?
 - **RQ3:** How are self-reported cybersecurity knowledge and previous phishing experience related to phishing detection performance?
 - **RQ4:** Which indicators do participants primarily rely on when identifying phishing emails?
 
@@ -38,14 +38,13 @@ The questionnaire contains 12 email examples:
 
 | Email category | Number of examples |
 |---|---:|
-| AI-generated phishing | 3 |
-| Human-written phishing | 3 |
-| Legitimate emails | 6 |
+| AI-generated phishing | 6 |
+| AI-generated legitimate-style | 6 |
 | **Total** | **12** |
 
 The survey collects age group, self-reported cybersecurity knowledge, previous phishing experience, email classifications, first detection indicator, and confidence.
 
-The authorship of legitimate email examples is recorded as unknown.
+All twelve email examples were generated using ChatGPT. The phishing examples are emails 01, 03, 05, 07, 09, and 11; the legitimate-style examples are emails 02, 04, 06, 08, 10, and 12. The legitimate-style messages are simulated examples, not independently collected real correspondence.
 
 The original participant-level survey export is kept private. Only approved aggregate research results may be published.
 
@@ -59,7 +58,7 @@ See:
 
 The study included 27 participants who classified 12 email examples, producing 324 classifications.
 
-The analysis used a verified answer key containing three AI-generated phishing emails, three human-written phishing emails, and six legitimate emails.
+The analysis used the documented answer key with six AI-generated phishing emails and six AI-generated legitimate-style emails.
 
 | Metric | Result |
 |---|---:|
@@ -67,16 +66,27 @@ The analysis used a verified answer key containing three AI-generated phishing e
 | Total classifications | 324 |
 | Overall accuracy | 79.3% |
 | Phishing recall | 85.2% |
-| AI-generated phishing recall | 85.2% |
-| Human-written phishing recall | 85.2% |
+| Phishing precision | 76.2% |
+| Legitimate-style specificity | 73.5% |
 | False positive rate | 26.5% |
 | F1-score | 80.5% |
 
-AI-generated and human-written phishing emails had equal observed detection recall in this sample. These findings do not establish that the two phishing categories are equally difficult in general.
+Recall across individual phishing examples ranged from 77.8% to 92.6%. Because all stimuli were AI-generated, this survey cannot compare AI-written and human-written phishing messages.
 
 The results are based on the documented email answer key and the anonymized survey responses.
 
-See the [Research Paper](docs/paper_draft.md) and [PDF Version](docs/paper_draft_f.pdf).
+See the [Research Paper](docs/paper_draft.md) and [PDF Version](docs/paper_draft_final.pdf).
+
+Survey figures (PNG and PDF) are available in `reports/figures/`:
+
+- [Classification accuracy by email](reports/figures/survey_accuracy_by_email.png)
+- [Recall across six phishing emails (95% CI)](reports/figures/survey_phishing_email_recall.png)
+- [Confusion matrix](reports/figures/survey_confusion_matrix.png)
+- [Cybersecurity knowledge](reports/figures/survey_cyber_knowledge.png)
+- [Previous phishing experience](reports/figures/survey_phishing_experience.png)
+- [First detection indicator](reports/figures/survey_first_indicator.png)
+
+Aggregate tables are in `data/processed/`, including `phishing_email_metrics.csv` and `survey_classification_confidence_intervals.csv`.
 
 ## 6. Technical Performance Benchmark
 
@@ -224,7 +234,12 @@ ai-phishing-literature-review/
 │   └── processed/
 │       ├── metrics_summary.csv
 │       ├── speedup_summary.csv
-│       └── benchmark_error_summary.csv
+│       ├── benchmark_error_summary.csv
+│       ├── email_classification_summary.csv
+│       ├── email_classification_summary_corrected.csv
+│       ├── survey_metrics_summary.csv
+│       ├── phishing_email_metrics.csv
+│       └── survey_classification_confidence_intervals.csv
 ├── docs/
 │   ├── domain_model.md
 │   ├── methodology.md
@@ -232,7 +247,7 @@ ai-phishing-literature-review/
 │   ├── email_stimuli.md
 │   ├── data_dictionary.md
 │   ├── paper_draft.md
-│   └── paper_draft_f.pdf
+│   └── paper_draft_final.pdf
 ├── notebooks/
 │   └── 01_data_analysis.ipynb
 ├── reports/
@@ -240,7 +255,13 @@ ai-phishing-literature-review/
 │       ├── fig1_latency_vs_load.png
 │       ├── fig1_latency_vs_load.pdf
 │       ├── fig2_distribution_boxplot.png
-│       └── fig2_distribution_boxplot.pdf
+│       ├── fig2_distribution_boxplot.pdf
+│       ├── survey_accuracy_by_email.png/.pdf
+│       ├── survey_phishing_email_recall.png/.pdf
+│       ├── survey_confusion_matrix.png/.pdf
+│       ├── survey_cyber_knowledge.png/.pdf
+│       ├── survey_phishing_experience.png/.pdf
+│       └── survey_first_indicator.png/.pdf
 ├── src/
 │   ├── benchmark.py
 │   ├── process_data.py
@@ -291,7 +312,7 @@ python src/visualize.py
 
 Alternatively, open `notebooks/01_data_analysis.ipynb` in Google Colab and run all cells sequentially.
 
-The Notebook generates the benchmark logs, processed tables, and scientific figures. Performance results may vary across environments and executions.
+The notebook generates the benchmark logs, processed tables, and scientific figures. Performance results may vary across environments and executions.
 
 ### Run the student survey analysis
 
@@ -317,8 +338,8 @@ The raw survey export and participant-level processed data must not be committed
 The project has several limitations:
 
 1. The survey contains a limited number of participants.
-2. Only three AI-generated and three human-written phishing examples are included.
-3. The authorship of legitimate email examples is unknown.
+2. Only six AI-generated phishing examples and six AI-generated legitimate-style examples were included.
+3. There is no independently human-written comparison group, and legitimate-style messages were simulated.
 4. Cybersecurity knowledge is self-reported.
 5. Confidence responses are incomplete.
 6. Response time was not measured in the survey.
