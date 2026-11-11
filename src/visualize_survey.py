@@ -69,6 +69,10 @@ def load_data():
         df["predicted_label"].astype(str).str.lower().str.strip()
     )
 
+    df["email_source"] = (
+        df["email_source"].astype("string").str.lower().str.strip()
+    )
+
     df["is_correct"] = (
         df["is_correct"].astype("boolean")
     )
@@ -220,69 +224,55 @@ def plot_accuracy_by_email(df):
 
     save_figure(fig, "survey_accuracy_by_email")
 
-
 # --------------------------------------------------
-# FIGURE 2: AI VS HUMAN PHISHING
+# FIGURE 2: RECALL BY AI-GENERATED PHISHING EMAIL
 # --------------------------------------------------
 
-def plot_ai_vs_human_recall(df):
+def plot_recall_by_phishing_email(df):
 
     phishing = df[
         (df["true_label"] == "phishing")
-        & (df["email_source"].isin(
-            ["ai_generated", "human_written"]
-        ))
+        & (df["email_source"] == "ai_generated")
+        & (df["predicted_label"].isin(["phishing", "legitimate"]))
     ].copy()
 
-    phishing["detected"] = (
-        phishing["predicted_label"] == "phishing"
-    ).astype(float)
+    expected_ids = {
+        "email_01", "email_03", "email_05",
+        "email_07", "email_09", "email_11"
+    }
 
-    # Calculate one result per participant and source.
-    participant_recall = (
-        phishing.groupby(
-            ["participant_id", "email_source"]
-        )["detected"]
-        .mean()
-        .reset_index()
-    )
-
-    sources = [
-        "ai_generated",
-        "human_written"
-    ]
+    if set(phishing["email_id"]) != expected_ids:
+        raise ValueError(
+            "Expected six AI-generated phishing email examples."
+        )
 
     rows = []
 
-    for source in sources:
+    for email_id, group in phishing.groupby("email_id"):
 
-        values = participant_recall.loc[
-            participant_recall["email_source"] == source,
-            "detected"
-        ].to_numpy()
+        detected = (
+            group["predicted_label"] == "phishing"
+        ).astype(float).to_numpy()
 
-        if len(values) == 0:
-            continue
-
-        lower, upper = bootstrap_ci(values)
+        lower, upper = bootstrap_ci(detected)
 
         rows.append({
-            "source": source,
-            "recall": values.mean() * 100,
+            "email_id": email_id,
+            "recall": detected.mean() * 100,
             "lower": lower * 100,
-            "upper": upper * 100
+            "upper": upper * 100,
         })
 
-    result = pd.DataFrame(rows)
+    result = pd.DataFrame(rows).sort_values("email_id")
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     positions = np.arange(len(result))
 
     ax.bar(
         positions,
         result["recall"],
-        color=sns.color_palette("colorblind")[:len(result)]
+        color=sns.color_palette("colorblind")[0]
     )
 
     ax.errorbar(
@@ -294,23 +284,21 @@ def plot_ai_vs_human_recall(df):
         ],
         fmt="none",
         ecolor="black",
-        capsize=5
+        capsize=4
     )
 
     ax.set_xticks(positions)
+    ax.set_xticklabels(result["email_id"])
 
-    ax.set_xticklabels([
-        "AI-generated",
-        "Human-written"
-    ][:len(result)])
-
-    ax.set_ylabel("Phishing Detection Recall (%)")
-    ax.set_xlabel("Phishing Email Authorship")
-    ax.set_title("AI vs Human Phishing Detection")
-
+    ax.set_xlabel("AI-Generated Phishing Email")
+    ax.set_ylabel("Detection Recall (%)")
+    ax.set_title(
+        "Detection Recall by AI-Generated Phishing Email (95% CI)"
+    )
     ax.set_ylim(0, 100)
 
-    save_figure(fig, "survey_ai_vs_human_recall")
+    save_figure(fig, "survey_phishing_email_recall")
+
 
 
 # --------------------------------------------------
@@ -536,7 +524,7 @@ def main():
     print("Generating research figures...")
 
     plot_accuracy_by_email(df)
-    plot_ai_vs_human_recall(df)
+    plot_recall_by_phishing_email(df)
     plot_confusion_matrix(df)
     plot_cyber_knowledge(df)
     plot_phishing_experience(df)
