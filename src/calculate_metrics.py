@@ -628,7 +628,7 @@ def main():
         ).to_string(index=False)
     )
 
-   print("\nRECALL BY AI-GENERATED PHISHING EMAIL")
+    print("\nRECALL BY AI-GENERATED PHISHING EMAIL")
 
     print(
         source_results.to_string(index=False)
