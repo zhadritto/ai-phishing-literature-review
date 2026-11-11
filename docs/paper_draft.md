@@ -9,11 +9,7 @@ GitHub: https://github.com/zhadritto/ai-phishing-literature-review
 
 ## Abstract
 
-The increasing availability of generative artificial intelligence has created new challenges for email security. Large Language Models (LLMs) can generate fluent and convincing phishing messages, potentially making fraudulent emails more difficult for users to identify. This study examines human responses to phishing and legitimate email examples through a student survey.
-
-The survey included 27 participants who classified 12 email examples, resulting in 324 recorded classifications. Participants selected “phishing” in 181 cases (55.9%) and “legitimate” in 143 cases (44.1%). The results demonstrate variation in how participants judged individual email examples. However, these response frequencies do not represent detection accuracy because verified ground-truth labels and the source classification of each email were not available in the response export.
-
-The study combines empirical survey analysis with existing research on human phishing detection and AI-generated malicious communication. Data processing and visualization were conducted using Python and Pandas. The findings provide descriptive insight into student judgements and highlight the importance of contextual awareness and careful email evaluation.
+The increasing availability of generative artificial intelligence has created new challenges for email security. This study investigates students' ability to identify AI-generated phishing, human-written phishing, and legitimate email messages. Twenty-seven participants completed an anonymous Google Forms survey containing 12 email classification tasks: three AI-generated phishing emails, three human-written phishing emails, and six legitimate emails. In total, 324 classifications were analyzed using a documented stimulus answer key. Overall classification accuracy was 79.3% (257/324), phishing recall was 85.2% (138/162), and the false positive rate for legitimate messages was 26.5% (43/162). Detection recall was 85.2% for both AI-generated and human-written phishing (69/81 each). These results show similar aggregate detection rates for the two phishing sources in this small survey; they do not establish equivalence between the sources. The study combines survey findings with a review of prior phishing-detection research and identifies limitations related to sample size, stimulus selection, and self-reported background variables.
 
 **Keywords:** AI-generated phishing, human detection, cybersecurity, large language models, phishing awareness, email security.
 
@@ -33,15 +29,15 @@ Although phishing awareness has received considerable attention, users continue 
 
 The central research question is:
 
-**How do people identify phishing emails in a selection of AI-generated phishing and legitimate email examples?**
+**How accurately do students identify AI-generated phishing, human-written phishing, and legitimate emails, and does detection differ by phishing source?**
 
 ### C. Research Objectives
 
 The objectives of this study are:
 
 1. To examine existing research on human phishing detection.
-2. To investigate how students classify phishing and legitimate email examples.
-3. To analyze response patterns across 12 email examples.
+2. To measure how accurately students classify phishing and legitimate email examples.
+3. To compare detection of AI-generated and human-written phishing emails.
 4. To examine the role of cybersecurity awareness in email evaluation.
 5. To identify challenges associated with AI-generated phishing communication.
 
@@ -90,122 +86,78 @@ The survey also included demographic and cybersecurity-related questions.
 
 ### B. Participants and Dataset
 
-The available survey export contains:
-
-- 27 participant records.
-- 12 email-classification questions.
-- 324 recorded classifications.
-
-The analysis uses anonymized response data and summarizes participant choices across the email examples.
+The Google Forms export contains 27 participant records. Each participant classified 12 email examples, yielding 324 non-missing classification responses. The stimulus set consisted of three AI-generated phishing emails (01, 05, 09), three human-written phishing emails (03, 07, 11), and six legitimate emails (02, 04, 06, 08, 10, 12), as recorded in `data/metadata/email_answer_key.csv`. The analysis uses anonymous participant-level responses. The accuracy of source attribution depends on the correctness of this answer key.
 
 ### C. Data Processing
 
-Python and Pandas were used for data inspection, processing, and statistical summaries.
-
-The analysis included:
-
-- Dataset structure inspection.
-- Column identification.
-- Missing-value assessment.
-- Duplicate-record inspection.
-- Response-frequency calculation.
-- Summary-table generation.
-- Data visualization.
+Responses were read from the Google Forms CSV export. The twelve classification columns (questions 4–15) were mapped in order to email_01 through email_12. The Russian response choices “Фишинговое письмо” and “Настоящее письмо” were mapped to phishing and legitimate, respectively, and compared against the documented answer key. All 27 participants provided answers to all 12 classification questions. Python and Pandas were used to compute classification counts and descriptive metrics.
 
 ### D. Evaluation Measures
 
-The descriptive analysis reports the number and percentage of participants selecting each response category.
+Accuracy is the proportion of all correct classifications. Phishing recall is the proportion of phishing examples correctly identified as phishing. False positive rate (FPR) is the proportion of legitimate examples incorrectly identified as phishing. Precision is the proportion of phishing predictions that are actually phishing, and F1-score is the harmonic mean of precision and recall. For the source comparison, recall was computed separately for AI-generated and human-written phishing examples. Percentages are based on pooled email classifications; repeated responses from the same participant are not independent observations. Participant-level bootstrap confidence intervals were calculated using 5,000 resamples of the 27 participants with replacement (seed 42), retaining all twelve responses for each sampled participant.
 
-Formal classification metrics, including Accuracy, Precision, Recall, Specificity, and F1-score, require verified ground-truth labels for every email stimulus.
-
-These metrics are not reported in the current analysis because the available response export does not contain a verified answer key.
-
-The confidence question was also excluded from group-level statistical analysis because most participant records did not contain a confidence response.
+The confidence question was not analyzed at group level because only one participant provided a non-missing confidence response.
 
 ## IV. RESULTS
 
-### A. Overall Classification Results
+### A. Overall Classification Performance
 
-A total of 324 email classifications were recorded.
+All 27 participants classified all 12 emails, producing 324 classifications. Of these, 257 were correct and 67 incorrect. Participants selected “phishing” 181 times (55.9%) and “legitimate” 143 times (44.1%). Unlike response frequency alone, the following performance metrics use the documented email answer key.
 
-| Response category | Responses | Percentage |
+| Measure | Value | Numerator / Denominator |
 |---|---:|---:|
-| Phishing | 181 | 55.9% |
-| Legitimate | 143 | 44.1% |
-| Total | 324 | 100% |
+| Overall accuracy | 79.3% | 257 / 324 |
+| Phishing recall | 85.2% | 138 / 162 |
+| Phishing precision | 76.2% | 138 / 181 |
+| False positive rate | 26.5% | 43 / 162 |
+| Specificity | 73.5% | 119 / 162 |
+| F1-score | 80.5% | Calculated from precision and recall |
 
-The results indicate that participants selected the phishing option more frequently than the legitimate option.
+The participant-level bootstrap 95% confidence interval for overall accuracy was 68.8%–88.9%. The 95% confidence interval for the false positive rate was 14.2%–39.5%.
 
-These figures represent response choices rather than objectively verified correct classifications.
+### B. AI-Generated vs Human-Written Phishing
 
-### B. Results by Email Example
+| Phishing source | Correct phishing detections | Total classifications | Recall | Participant-bootstrap 95% CI |
+|---|---:|---:|---:|---:|
+| AI-generated | 69 | 81 | 85.2% | 74.1%–95.1% |
+| Human-written | 69 | 81 | 85.2% | 75.3%–93.8% |
 
-| Email | Phishing | Legitimate |
-|---|---:|---:|
-| Email 01 | 24 (88.9%) | 3 (11.1%) |
-| Email 02 | 5 (18.5%) | 22 (81.5%) |
-| Email 03 | 23 (85.2%) | 4 (14.8%) |
-| Email 04 | 7 (25.9%) | 20 (74.1%) |
-| Email 05 | 24 (88.9%) | 3 (11.1%) |
-| Email 06 | 6 (22.2%) | 21 (77.8%) |
-| Email 07 | 25 (92.6%) | 2 (7.4%) |
-| Email 08 | 6 (22.2%) | 21 (77.8%) |
-| Email 09 | 21 (77.8%) | 6 (22.2%) |
-| Email 10 | 10 (37.0%) | 17 (63.0%) |
-| Email 11 | 21 (77.8%) | 6 (22.2%) |
-| Email 12 | 9 (33.3%) | 18 (66.7%) |
+Both phishing sources had the same pooled recall (85.2%). The observed difference in recall (AI minus human-written) was 0.0 percentage points, with a participant-bootstrap 95% confidence interval of -6.2%–7.4%. This sample does not show an aggregate difference in recall, but the limited sample and small number of distinct phishing stimuli do not support a conclusion of equivalence.
 
-### C. Main Observations
+### C. Results by Email Example
 
-Email 07 received the highest number of phishing classifications, with 25 out of 27 participants selecting this response.
+| Email | Classified phishing | Classified legitimate | Answer-key category |
+|---|---:|---:|---|
+| Email 01 | 24 (88.9%) | 3 (11.1%) | AI phishing |
+| Email 02 | 5 (18.5%) | 22 (81.5%) | Legitimate |
+| Email 03 | 23 (85.2%) | 4 (14.8%) | Human phishing |
+| Email 04 | 7 (25.9%) | 20 (74.1%) | Legitimate |
+| Email 05 | 24 (88.9%) | 3 (11.1%) | AI phishing |
+| Email 06 | 6 (22.2%) | 21 (77.8%) | Legitimate |
+| Email 07 | 25 (92.6%) | 2 (7.4%) | Human phishing |
+| Email 08 | 6 (22.2%) | 21 (77.8%) | Legitimate |
+| Email 09 | 21 (77.8%) | 6 (22.2%) | AI phishing |
+| Email 10 | 10 (37.0%) | 17 (63.0%) | Legitimate |
+| Email 11 | 21 (77.8%) | 6 (22.2%) | Human phishing |
+| Email 12 | 9 (33.3%) | 18 (66.7%) | Legitimate |
 
-Email 02 received the highest number of legitimate classifications, with 22 out of 27 participants selecting this response.
-
-These differences demonstrate that participants responded differently to the individual email examples.
-
-However, without verified message labels, these patterns cannot establish which examples were correctly or incorrectly classified.
+Email 07 was most often classified as phishing (25/27, 92.6%), while Email 02 was most often classified as legitimate (22/27, 81.5%). Individual stimuli varied in difficulty, including among messages with the same source category.
 
 ## V. DISCUSSION
 
-The survey provides descriptive insight into how students evaluate different email examples.
+Participants correctly classified 79.3% of all email examples, with higher phishing recall (85.2%) than legitimate-email specificity (73.5%). The 26.5% false positive rate indicates that a substantial proportion of legitimate messages were incorrectly flagged as phishing. AI-generated and human-written phishing messages had identical pooled recall in this sample. This does not demonstrate that AI-generated phishing is generally no harder to detect: there were only three distinct examples from each phishing source, and the result may depend on the selected messages and participants.
 
-The overall response distribution shows that participants selected phishing more frequently than legitimate. The differences between individual email examples also demonstrate variation in participant judgement.
-
-These observations are relevant to existing research on human phishing detection.
-
-The Phish Scale emphasizes the importance of contextual relevance and message characteristics. Research by Sturman et al. similarly highlights the importance of recognizing and interpreting phishing indicators.
-
-The development of generative AI makes this topic particularly relevant because professional language and natural sentence structure can make suspicious messages appear more authentic.
-
-The findings should nevertheless be interpreted within the limitations of the available dataset. Response frequencies cannot establish detection accuracy without verified labels.
+Prior research on the Phish Scale and cue utilization emphasizes the role of context and warning signs in phishing detection. The present study adds descriptive survey evidence, but its design does not establish causal effects of AI authorship or cybersecurity knowledge. The technical performance benchmark in this repository evaluates software execution time and is separate from these human-detection findings.
 
 ## VI. LIMITATIONS
 
-Several limitations should be considered when interpreting the results.
+First, the survey included only 27 participants, limiting generalizability. Second, each participant judged 12 messages, so the 324 classifications are repeated observations rather than 324 independent participants; participant-level resampling partly addresses within-person dependence but does not account for uncertainty from selecting only 12 stimuli. Third, only three AI-generated and three human-written phishing emails were tested. Fourth, the validity of source-specific findings depends on the documented answer key and its underlying provenance. Fifth, cybersecurity knowledge and prior experience were self-reported; no causal conclusions are warranted. Finally, confidence was available for only one participant, preventing a meaningful confidence analysis.
 
-First, the survey included 27 participants, and the findings should not be generalized to the entire population.
-
-Second, each participant classified multiple email examples, meaning that the observations are repeated classifications rather than independent participants.
-
-Third, the available response export does not contain verified ground-truth labels or source-provenance information for all 12 email examples.
-
-Fourth, confidence responses were incomplete, preventing meaningful group-level confidence analysis.
-
-Finally, the available dataset does not document an automated-system comparison or a verifiable warm-up exclusion procedure.
-
-Future research should include a verified answer key, documented email-generation procedures, and a larger participant sample.
+Future research should recruit a larger and more diverse sample, use more independently validated email stimuli, document their provenance, and assess associations with cybersecurity experience using an analysis appropriate for repeated observations.
 
 ## VII. CONCLUSION
 
-This study examined human responses to phishing and legitimate email examples through a student survey and a review of existing cybersecurity research.
-
-The survey included 27 participants and 12 email examples, producing 324 recorded classifications. Participants selected phishing in 55.9% of cases and legitimate in 44.1% of cases.
-
-The results demonstrate variation in how participants evaluate different email examples and provide a descriptive foundation for understanding human responses to potentially deceptive email communication.
-
-Combined with existing research, the project highlights the importance of cybersecurity awareness, contextual evaluation, and careful inspection of email characteristics in an environment increasingly influenced by generative AI.
-
-Further research using verified email labels, documented source conditions, and a larger sample would allow more detailed evaluation of human detection performance.
+In this student survey, 27 participants classified 12 email examples each, yielding 324 responses. Overall classification accuracy was 79.3%, phishing recall was 85.2%, and the false positive rate was 26.5%. AI-generated and human-written phishing messages were each detected in 69 of 81 classifications (85.2%). These findings describe performance on the specific survey stimuli; they do not establish that the two phishing sources are equally difficult in general. The results reinforce the need for careful evaluation of suspicious messages and further research with larger participant and stimulus samples.
 
 ## ACKNOWLEDGMENT
 
