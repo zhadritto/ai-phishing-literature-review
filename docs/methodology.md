@@ -40,11 +40,11 @@ Detailed questions and hypotheses are documented in `research_questions.md`.
 
 ## 4. Participants and Sampling
 
-The latest response table supplied for analysis contains 30 participant records.
+The study included 27 participants who completed the Google Forms questionnaire.
 
-Each participant was asked to classify 12 email examples.
+Each participant classified 12 email examples, resulting in 324 recorded email classifications.
 
-The final participant count and the completeness of all responses must be confirmed against the original Google Forms export before publication.
+The final participant count was confirmed using the Google Forms response summary.
 
 The survey includes the following demographic and background variables:
 
