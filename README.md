@@ -75,7 +75,7 @@ Recall across individual phishing examples ranged from 77.8% to 92.6%. Because a
 
 The results are based on the documented email answer key and the anonymized survey responses.
 
-See the [Research Paper](docs/paper_draft.md) and [PDF Version](docs/paper_draft_final.pdf).
+See the [Research Paper](docs/paper_draft.md) and [PDF Version](docs/paper_draft_f.pdf).
 
 Survey figures (PNG and PDF) are available in `reports/figures/`:
 
