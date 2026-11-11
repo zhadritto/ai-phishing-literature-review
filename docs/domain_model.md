@@ -107,7 +107,7 @@ The survey collects the following participant information:
 | first_indicator | Categorical | First email characteristic checked |
 | confidence | Numeric | Self-reported confidence, if provided |
 
-The latest supplied response table contains 30 participant records. This count must be confirmed against the original export before publication.
+The final number of valid participants must be verified against the original survey export and reported consistently across the methodology, results, and research paper.
 
 ### 5.2. Email Stimulus Data
 
@@ -179,6 +179,48 @@ The public repository must not contain:
 - Confidential research files.
 
 Only reviewed aggregate results, source code, and approved documentation may be published.
+
+## 7. STRIDE Threat Matrix
+
+The STRIDE threat model identifies potential security threats affecting the research data collection and analysis workflow.
+
+STRIDE consists of six categories: Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
+
+| STRIDE Category | Protected Component | Potential Threat | Impact | Mitigation |
+|---|---|---|---|---|
+| Spoofing | Google Forms | A person submits responses while pretending to be another participant | Duplicate or fraudulent responses may affect research results | Check duplicate submissions and review suspicious response patterns |
+| Tampering | Raw CSV and Email Answer Key | Survey responses or correct labels are modified without authorization | Incorrect classification metrics and unreliable conclusions | Restrict file access, validate data, and maintain version history |
+| Repudiation | Data Processing Workflow | Changes to research files cannot be traced to an authorized researcher | Difficulty verifying the origin of modifications | Use Git commit history and document data processing decisions |
+| Information Disclosure | Raw Survey Data | Participant-level information is accidentally published in the public repository | Loss of confidentiality and potential privacy violations | Keep raw participant data private and publish only reviewed aggregate results |
+| Denial of Service | Google Forms and Analysis Environment | Excessive submissions or unavailable services interrupt data collection or processing | Delayed research and incomplete datasets | Maintain authorized backups and validate the completeness of exported data |
+| Elevation of Privilege | Research Storage and GitHub Repository | An unauthorized user obtains access to restricted research files or repository settings | Unauthorized modification or disclosure of research data | Apply least-privilege access, protect accounts, and review repository permissions |
+
+### 7.1. Protected Assets
+
+The main protected assets are:
+
+- Participant survey responses.
+- Original CSV exports.
+- Verified email answer key.
+- Data processing scripts.
+- Statistical results and scientific figures.
+- Research documentation and repository integrity.
+
+### 7.2. Threat Prioritization
+
+The most important threats for this research are:
+
+1. **Information Disclosure:** Accidental publication of participant-level survey data.
+2. **Tampering:** Unauthorized modification of the answer key or participant responses.
+3. **Spoofing:** Fraudulent or duplicate survey submissions affecting the validity of results.
+
+These threats directly affect participant privacy, data integrity, and the reliability of the research conclusions.
+
+### 7.3. Security Considerations
+
+The research team should restrict access to original survey exports, validate input data, maintain a separate verified answer key, and review files before publication.
+
+The proposed mitigations describe security measures that should be applied. Their presence in this document does not by itself confirm that every measure has been implemented.
 
 ## 8. Security Controls
 
@@ -258,94 +300,4 @@ The domain model describes the main components, data flows, trust boundaries, an
 
 The STRIDE analysis identifies potential threats to survey collection, research data integrity, confidentiality, and reproducibility.
 
-The proposed controls support responsible data handling and transparent research analysis.
-```
-
-### 3. Сохрани файл
-
-Внизу GitHub нажми **Commit changes**.
-
-Commit message:
-
-```text
-docs: improve domain model and STRIDE threat analysis
-```
-
-<badge color="success">Шаг 6 завершён</badge>
-
----
-
-# Шаг 7. Создать `docs/data_dictionary.md`
-
-Теперь создадим словарь данных. Он объясняет преподавателю, что означает каждая колонка в твоей таблице.
-
-В папке `docs` нажми `Add file → Create new file`.
-
-Название:
-
-```text
-data_dictionary.md
-```
-
-Вставь:
-
-<CodeBlock language="markdown" editable>
-# Data Dictionary
-
-## 1. Overview
-
-This document defines the variables used in the student phishing detection survey.
-
-The original survey was created using Google Forms and contains demographic questions, email classification responses, and additional participant information.
-
-## 2. Participant Variables
-
-| Variable | Data Type | Description | Allowed Values |
-|---|---|---|---|
-| participant_id | String | Pseudonymous participant identifier | P001, P002, ... |
-| age_group | Categorical | Participant age category | Under 18, 18–20, 21–23, 24 or older |
-| cyber_knowledge | Categorical | Self-reported cybersecurity knowledge | Low, Medium, High |
-| phishing_experience | Categorical | Previous phishing experience | Recognized immediately, Recognized later, No, Unsure |
-| first_indicator | Categorical | First indicator checked by the participant | Sender address, Links and attachments, Urgency and threats, Personal or banking information, Grammar and writing style, Other |
-| confidence | Integer | Self-reported confidence | 1–5, when provided |
-
-## 3. Email Classification Variables
-
-| Variable | Data Type | Description | Allowed Values |
-|---|---|---|---|
-| email_id | String | Unique email identifier | email_01–email_12 |
-| predicted_label | Categorical | Participant's classification | phishing, legitimate |
-| true_label | Categorical | Verified ground-truth class | phishing, legitimate |
-| email_source | Categorical | Email authorship category | ai_generated, human_written, unknown |
-| is_correct | Boolean | Whether the response matches the ground truth | True, False |
-
-## 4. Email Groups
-
-| Group | Email IDs | Number of Examples |
-|---|---|---:|
-| AI-generated phishing | 01, 05, 09 | 3 |
-| Human-written phishing | 03, 07, 11 | 3 |
-| Legitimate | 02, 04, 06, 08, 10, 12 | 6 |
-
-## 5. Derived Metrics
-
-| Metric | Formula |
-|---|---|
-| Accuracy | (TP + TN) / (TP + TN + FP + FN) |
-| Precision | TP / (TP + FP) |
-| Recall | TP / (TP + FN) |
-| Specificity | TN / (TN + FP) |
-| False Positive Rate | FP / (FP + TN) |
-| F1-score | 2 × Precision × Recall / (Precision + Recall) |
-
-## 6. Missing Values
-
-Missing survey responses are represented as missing values rather than being replaced with assumed answers.
-
-The confidence variable is incomplete in the currently supplied response table and must not be used for group-level statistical conclusions.
-
-## 7. Privacy
-
-The original timestamp column and direct identifying information are not required for the public aggregate analysis.
-
-Participant-level records remain in restricted local storage.
+The proposed controls support responsible data handling and transparent research analysis. 
