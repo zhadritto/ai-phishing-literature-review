@@ -128,21 +128,21 @@ def load_answer_key():
         raise ValueError(
             "Ground truth and source fields cannot be empty."
         )
-
+        
     # Verify the expected classification and authorship mapping.
     expected_mapping = {
         "email_01": ("phishing", "ai_generated"),
-        "email_02": ("legitimate", "unknown"),
-        "email_03": ("phishing", "human_written"),
-        "email_04": ("legitimate", "unknown"),
+        "email_02": ("legitimate", "ai_generated"),
+        "email_03": ("phishing", "ai_generated"),
+        "email_04": ("legitimate", "ai_generated"),
         "email_05": ("phishing", "ai_generated"),
-        "email_06": ("legitimate", "unknown"),
-        "email_07": ("phishing", "human_written"),
-        "email_08": ("legitimate", "unknown"),
+        "email_06": ("legitimate", "ai_generated"),
+        "email_07": ("phishing", "ai_generated"),
+        "email_08": ("legitimate", "ai_generated"),
         "email_09": ("phishing", "ai_generated"),
-        "email_10": ("legitimate", "unknown"),
-        "email_11": ("phishing", "human_written"),
-        "email_12": ("legitimate", "unknown"),
+        "email_10": ("legitimate", "ai_generated"),
+        "email_11": ("phishing", "ai_generated"),
+        "email_12": ("legitimate", "ai_generated"),
     }
 
     for _, row in key.iterrows():
