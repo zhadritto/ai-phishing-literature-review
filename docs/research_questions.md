@@ -26,7 +26,7 @@ The study has the following objectives:
 
 **RQ1.** How accurately can university students identify AI-generated phishing emails?
 
-**RQ2.** Is there a difference in participants' ability to detect AI-generated and human-written phishing emails?
+**RQ2.** How does students' detection performance vary across different AI-generated phishing email examples?
 
 **RQ3.** How are self-reported cybersecurity knowledge and previous phishing experience related to phishing detection performance?
 
