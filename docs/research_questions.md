@@ -38,7 +38,7 @@ The study has the following objectives:
 
 **H2.** Participants with previous experience recognizing phishing messages demonstrate higher phishing detection performance than participants without such experience.
 
-**H3.** Participants' detection performance differs between the selected AI-generated and human-written phishing examples.
+**H3.** Participants' detection performance varies across the six selected AI-generated phishing email examples.
 
 These hypotheses are exploratory and are evaluated using the collected survey data.
 
@@ -74,8 +74,8 @@ Self-reported cybersecurity knowledge does not represent an objective cybersecur
 | Research Question | Data | Planned Analysis |
 |---|---|---|
 | RQ1 | AI-generated phishing classifications | AI phishing Recall |
-| RQ2 | AI and human phishing classifications | Participant-level paired comparison |
+| RQ2 | Six AI-generated phishing email classifications | Per-email detection recall and descriptive comparison |
 | RQ3 | Cybersecurity knowledge and previous experience | Group-level descriptive and exploratory analysis |
 | RQ4 | First detection indicator | Frequency and percentage distribution |
 
-The analysis will use verified ground-truth labels and participant responses. The analysis uses verified ground-truth labels and participant responses from 27 participants, covering 324 email classifications. Results are reported in the research paper and README.md. Comparisons between AI-generated and human-written phishing emails are interpreted cautiously due to the limited number of stimuli.
+The analysis will use verified ground-truth labels and participant responses. The analysis uses verified ground-truth labels and participant responses from 27 participants, covering 324 email classifications. Results are reported in the research paper and README.md. Comparisons across individual phishing examples are exploratory due to the limited number of stimuli.
