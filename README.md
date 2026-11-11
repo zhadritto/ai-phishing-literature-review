@@ -55,7 +55,30 @@ See:
 - [Email Stimuli](docs/email_stimuli.md)
 - [Data Dictionary](docs/data_dictionary.md)
 
-## 5. Technical Performance Benchmark
+## 5. Student Survey Results
+
+The study included 27 participants who classified 12 email examples, producing 324 classifications.
+
+The analysis used a verified answer key containing three AI-generated phishing emails, three human-written phishing emails, and six legitimate emails.
+
+| Metric | Result |
+|---|---:|
+| Participants | 27 |
+| Total classifications | 324 |
+| Overall accuracy | 79.3% |
+| Phishing recall | 85.2% |
+| AI-generated phishing recall | 85.2% |
+| Human-written phishing recall | 85.2% |
+| False positive rate | 26.5% |
+| F1-score | 80.5% |
+
+AI-generated and human-written phishing emails had equal observed detection recall in this sample. These findings do not establish that the two phishing categories are equally difficult in general.
+
+The results are based on the documented email answer key and the anonymized survey responses.
+
+See the [Research Paper](docs/paper_draft.md) and [PDF Version](docs/paper_draft_f.pdf).
+
+## 6. Technical Performance Benchmark
 
 A separate benchmark evaluates two implementations of the same data-processing task:
 
@@ -64,7 +87,7 @@ A separate benchmark evaluates two implementations of the same data-processing t
 
 Both implementations process the same synthetic classification workload and are validated to produce equivalent analytical results.
 
-### 5.1. Experimental Configuration
+### 6.1. Experimental Configuration
 
 | Parameter | Value |
 |---|---:|
@@ -81,7 +104,7 @@ Both implementations process the same synthetic classification workload and are 
 
 **Benchmark environment:** Python 3.13.18, Linux x86_64, 2 logical CPUs, Pandas 2.2.3, NumPy 2.4.6. The processor was reported as x86_64; a specific CPU model was not recorded.
 
-### 5.2. Results and Discussion
+### 6.2. Results and Discussion
 
 The benchmark compares processing latency under four input sizes.
 
@@ -98,7 +121,7 @@ Mean and standard deviation are reported alongside median and interquartile rang
 | Baseline | 10,000 | 23.258 ± 10.336 | 20.876 (20.689–21.348) |
 | Proposed | 10,000 | 23.365 ± 2.639 | 22.520 (22.219–23.583) |
 
-### 5.3. Percentile Analysis
+### 6.3. Percentile Analysis
 
 | Load (records) | Method | p95 (ms) | p99 (ms) |
 |---:|---|---:|---:|
@@ -111,7 +134,7 @@ Mean and standard deviation are reported alongside median and interquartile rang
 | 10,000 | Baseline | 26.826 | 63.414 |
 | 10,000 | Proposed | 25.696 | 33.038 |
 
-### 5.4. Confidence Intervals
+### 6.4. Confidence Intervals
 
 A 95% percentile-bootstrap confidence interval was calculated for the median of successful evaluation runs.
 
@@ -126,7 +149,7 @@ A 95% percentile-bootstrap confidence interval was calculated for the median of 
 | 10,000 | Baseline | 20.753–21.129 |
 | 10,000 | Proposed | 22.321–23.191 |
 
-### 5.5. Error Rate and Data Quality
+### 6.5. Error Rate and Data Quality
 
 All 240 evaluation executions completed successfully.
 
@@ -140,7 +163,7 @@ Synthetic missing and invalid prediction records were deliberately included as i
 
 The observed execution error rate satisfies the benchmark's zero-failure outcome.
 
-### 5.6. Discussion
+### 6.6. Discussion
 
 The experimental results show that the baseline implementation achieved lower median processing latency than the proposed Pandas implementation across all four tested input sizes.
 
@@ -154,7 +177,7 @@ Further investigation is needed to identify the sources of overhead and evaluate
 
 The benchmark uses synthetic data for a local processing task. Its results must not be interpreted as measurements of phishing detection effectiveness or student behavior.
 
-## 6. Scientific Visualizations
+## 7. Scientific Visualizations
 
 ### Figure 1. Processing Latency vs Input Load
 
@@ -172,7 +195,7 @@ The boxplot compares execution-time distributions for both implementations at di
 
 [Download vector PDF](reports/figures/fig2_distribution_boxplot.pdf)
 
-## 7. Domain Model and Security Analysis
+## 8. Domain Model and Security Analysis
 
 The project includes a STRIDE threat model covering:
 
@@ -187,7 +210,7 @@ The threat model identifies risks to survey collection, raw research data, proce
 
 See [Domain Model and STRIDE Threat Analysis](docs/domain_model.md).
 
-## 8. Repository Structure
+## 9. Repository Structure
 
 ```text
 ai-phishing-literature-review/
@@ -207,7 +230,9 @@ ai-phishing-literature-review/
 │   ├── methodology.md
 │   ├── research_questions.md
 │   ├── email_stimuli.md
-│   └── data_dictionary.md
+│   ├── data_dictionary.md
+│   ├── paper_draft.md
+│   └── paper_draft_f.pdf
 ├── notebooks/
 │   └── 01_data_analysis.ipynb
 ├── reports/
@@ -233,7 +258,7 @@ ai-phishing-literature-review/
 
 The private Google Forms export is expected at `data/raw/responses.csv` for local survey analysis and must not be committed to the public repository.
 
-## 9. Reproducibility
+## 10. Reproducibility
 
 ### Requirements
 
@@ -287,7 +312,7 @@ python src/visualize_survey.py
 
 The raw survey export and participant-level processed data must not be committed to the public repository.
 
-## 10. Research Limitations
+## 11. Research Limitations
 
 The project has several limitations:
 
@@ -304,13 +329,13 @@ The project has several limitations:
 
 These limitations should be considered when interpreting the findings.
 
-## 11. Authors
+## 12. Authors
 
 **Zhadyra Kurmanova**  
 **Meirim Yersultan**
 
 Narxoz University
 
-## 12. Repository
+## 13. Repository
 
 [GitHub Repository](https://github.com/zhadritto/ai-phishing-literature-review)
