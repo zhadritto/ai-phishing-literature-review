@@ -17,37 +17,37 @@ The ground-truth class and authorship are separate variables.
 | Email ID | Ground Truth | Authorship |
 |---|---|---|
 | email_01 | Phishing | AI-generated |
-| email_02 | Legitimate | Unknown |
-| email_03 | Phishing | Human-written |
-| email_04 | Legitimate | Unknown |
+| email_02 | Legitimate | AI-generated |
+| email_03 | Phishing | AI-generated |
+| email_04 | Legitimate | AI-generated |
 | email_05 | Phishing | AI-generated |
-| email_06 | Legitimate | Unknown |
-| email_07 | Phishing | Human-written |
-| email_08 | Legitimate | Unknown |
+| email_06 | Legitimate | AI-generated |
+| email_07 | Phishing | AI-generated |
+| email_08 | Legitimate | AI-generated |
 | email_09 | Phishing | AI-generated |
-| email_10 | Legitimate | Unknown |
-| email_11 | Phishing | Human-written |
-| email_12 | Legitimate | Unknown |
+| email_10 | Legitimate | AI-generated |
+| email_11 | Phishing | AI-generated |
+| email_12 | Legitimate | AI-generated |
 
 ## 3. Experimental Groups
 
-The phishing examples are divided into two authorship groups:
+The survey contains two email categories:
 
-- AI-generated phishing: 3 email examples.
-- Human-written phishing: 3 email examples.
+- AI-generated phishing: 6 email examples.
+- AI-generated legitimate examples: 6 email examples.
 
-The survey also contains six legitimate email examples.
-
-The authorship of the legitimate examples has not been established and is recorded as unknown.
+All 12 email examples were drafted using ChatGPT. The study does not contain a verified human-written email comparison group.
 
 ## 4. Interpretation
 
-The survey allows a comparison of participant responses to the selected AI-generated and human-written phishing examples.
+The survey evaluates participants' ability to distinguish AI-generated phishing examples from AI-generated legitimate examples.
 
-However, each phishing group contains only three email stimuli. Therefore, findings should be interpreted as results for the selected examples and should not be generalized to all AI-generated or human-written phishing emails.
+Detection performance can also be compared descriptively across the six phishing examples.
+
+The findings apply to the selected email examples and should not be generalized to all phishing emails.
 
 ## 5. Verification
 
-The email labels and authorship categories must be checked against the original questionnaire and the researchers' stimulus records.
+The phishing and legitimate ground-truth labels were checked against the original questionnaire and its answer key.
 
-No undocumented generation prompts, dates, or tools should be added retrospectively.
+All 12 email examples were drafted using ChatGPT, as confirmed by the researchers' account of how the questionnaire was prepared.
